@@ -96,7 +96,7 @@
             --tab-inactive: #f8bbd9;
         }
 
-        /* Анимированные фоны за достижения - ПЕРЕДЕЛАНЫ */
+        /* Анимированные фоны за достижения */
 .bg-achievement-gold {
     position: fixed;
     top: 0;
@@ -400,6 +400,32 @@
     font-size: 12px;
     font-weight: bold;
     animation: pulse 2s infinite;
+}
+
+/* Стили для сообщений */
+.message-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+    max-width: 400px;
+    border-left: 4px solid var(--secondary-color);
+}
+
+.message-notification.error {
+    background: linear-gradient(135deg, var(--error-color) 0%, #b71c1c 100%);
+    border-left-color: #ff5252;
+}
+
+.message-notification.success {
+    background: linear-gradient(135deg, var(--success-color) 0%, #0d5c3a 100%);
+    border-left-color: #4caf50;
 }
 
         * {
@@ -1364,7 +1390,7 @@
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-sync-alt"></i> Версия приложения</div>
-                        <div class="info-value" id="appVersion">1.0.5</div>
+                        <div class="info-value" id="appVersion">1.0.6</div>
                     </div>
                     <button id="manualCheckUpdate" class="search-btn" style="width: 100%; margin-top: 10px;">
                         <i class="fas fa-sync-alt"></i> Проверить обновления
@@ -1616,8 +1642,8 @@
         // Основной API сервер
         const MAIN_API_SERVER = 'https://monitor.sedo.keydisk.ru';
         const ASTRAL_API_SERVER = 'https://monitor.sedo.cloud.astral-dev.ru';
-        
-        // Конфигурация прокси
+
+        // Конфигурация прокси - ОПТИМИЗИРОВАНА
         const PROXY_CONFIG = {
             'direct': {
                 name: 'Прямое подключение к API',
@@ -1627,32 +1653,37 @@
             'corsproxy': {
                 name: 'CORS Proxy',
                 format: 'https://corsproxy.io/?{}',
-                testUrl: `https://corsproxy.io/?${MAIN_API_SERVER}/message/f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3`
+                testUrl: `https://corsproxy.io/?${encodeURIComponent(`${MAIN_API_SERVER}/message/f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3`)}`
             },
             'allorigins': {
                 name: 'AllOrigins',
                 format: 'https://api.allorigins.win/raw?url={}',
-                testUrl: `https://api.allorigins.win/raw?url=${MAIN_API_SERVER}/message/f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3`
+                testUrl: `https://api.allorigins.win/raw?url=${encodeURIComponent(`${MAIN_API_SERVER}/message/f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3`)}`
             }
         };
 
-        // Конфигурация поиска подписки (убрали КПП)
+        // Конфигурация поиска подписки
         const SUBSCRIPTION_CONFIG = {
             'inn': {
                 name: 'Проверка подписки по ИНН',
                 placeholder: 'Введите ИНН клиента (10 или 12 цифр)',
                 path: '/subscription/inn/',
-                example: '7712345678'
+                example: '7712345678',
+                validate: (value) => {
+                    const cleaned = value.replace(/\D/g, '');
+                    return cleaned.length === 10 || cleaned.length === 12;
+                }
             },
             'regnum': {
                 name: 'Проверка подписки по рег.номеру СФР',
                 placeholder: 'Введите рег.номер клиента СФР',
                 path: '/subscription/regnum/',
-                example: '2322720573'
+                example: '2322720573',
+                validate: (value) => value.length >= 3
             }
         };
 
-        // Конфигурация поиска сообщений
+        // Конфигурация поиска сообщений - ОПТИМИЗИРОВАНА
         const MESSAGES_CONFIG = {
             'message': {
                 name: 'Поиск по ID сообщения',
@@ -1660,7 +1691,11 @@
                 needsDates: false,
                 baseUrl: MAIN_API_SERVER,
                 path: '/message/',
-                example: 'f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3'
+                example: 'f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3',
+                validate: (value) => {
+                    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                    return uuidRegex.test(value) || value.length > 10;
+                }
             },
             'clientRegNum': {
                 name: 'Поиск по рег.номеру клиента СФР',
@@ -1668,7 +1703,9 @@
                 needsDates: true,
                 baseUrl: MAIN_API_SERVER,
                 path: '/documents/client/regnum/',
-                example: '123-456-789'
+                example: '123-456-789',
+                limit: 50, // Ограничение количества результатов
+                validate: (value) => value.length >= 3
             },
             'clientGuid': {
                 name: 'Поиск по GUID учетной записи клиента',
@@ -1676,7 +1713,12 @@
                 needsDates: true,
                 baseUrl: MAIN_API_SERVER,
                 path: '/documents/client/guid/',
-                example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+                example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+                limit: 50,
+                validate: (value) => {
+                    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                    return uuidRegex.test(value);
+                }
             },
             'clientInn': {
                 name: 'Поиск по ИНН клиента',
@@ -1684,7 +1726,12 @@
                 needsDates: true,
                 baseUrl: MAIN_API_SERVER,
                 path: '/documents/client/inn/',
-                example: '7712345678'
+                example: '7712345678',
+                limit: 50,
+                validate: (value) => {
+                    const cleaned = value.replace(/\D/g, '');
+                    return cleaned.length === 10 || cleaned.length === 12;
+                }
             },
             'insurantRegNum': {
                 name: 'Поиск по рег.номеру налогоплательщика в ФСС',
@@ -1692,7 +1739,8 @@
                 needsDates: true,
                 baseUrl: ASTRAL_API_SERVER,
                 path: '/documents/insurant/regnum/',
-                
+                limit: 50,
+                validate: (value) => value.length >= 3
             },
             'insurantInn': {
                 name: 'Поиск по ИНН налогоплательщика',
@@ -1700,8 +1748,29 @@
                 needsDates: true,
                 baseUrl: ASTRAL_API_SERVER,
                 path: '/documents/insurant/inn/',
-                example: '7723456789'
+                example: '7723456789',
+                limit: 50,
+                validate: (value) => {
+                    const cleaned = value.replace(/\D/g, '');
+                    return cleaned.length === 10;
+                }
             }
+        };
+
+        // === КОНФИГУРАЦИЯ ОПТИМИЗАЦИИ ===
+        const CACHE_CONFIG = {
+            TTL: 5 * 60 * 1000, // 5 минут
+            MAX_ITEMS: 50,
+            ENABLED: true
+        };
+
+        const REQUEST_CONFIG = {
+            MAX_RETRIES: 3,
+            RETRY_DELAY: 1000,
+            TIMEOUT: 15000, // Увеличено до 15 секунд
+            DEBOUNCE_DELAY: 500,
+            RATE_LIMIT_DELAY: 1000, // Задержка между запросами
+            MAX_REQUESTS_PER_MINUTE: 30 // Лимит запросов
         };
 
         // Предустановленные темы
@@ -1744,27 +1813,8 @@
                     'achievement-color': '#ba68c8'
                 }
             },
-            'blue': {
-                name: 'Синяя',
-                colors: {
-                    'primary-color': '#1565c0',
-                    'primary-dark': '#0d47a1',
-                    'primary-light': '#5e92f3',
-                    'secondary-color': '#00bcd4',
-                    'secondary-dark': '#00838f',
-                    'background-color': '#e3f2fd',
-                    'card-bg': '#ffffff',
-                    'text-color': '#0d47a1',
-                    'text-light': '#546e7a',
-                    'border-color': '#bbdefb',
-                    'success-color': '#00c853',
-                    'error-color': '#d50000',
-                    'warning-color': '#ff9100',
-                    'achievement-color': '#7b1fa2'
-                }
-            },
             'green': {
-                name: 'Зелёная',
+                name: 'Зеленая',
                 colors: {
                     'primary-color': '#1a8754',
                     'primary-dark': '#0d5c3a',
@@ -1901,21 +1951,39 @@
             }
         };
 
-        // === КОНФИГУРАЦИЯ ОПТИМИЗАЦИИ ===
-        const CACHE_CONFIG = {
-            TTL: 5 * 60 * 1000, // 5 минут
-            MAX_ITEMS: 50,
-            ENABLED: true
-        };
+        // Система лимита запросов
+        class RateLimiter {
+            constructor(maxRequestsPerMinute) {
+                this.maxRequestsPerMinute = maxRequestsPerMinute;
+                this.requests = [];
+            }
 
-        const REQUEST_CONFIG = {
-            MAX_RETRIES: 2,
-            RETRY_DELAY: 1000,
-            TIMEOUT: 10000,
-            DEBOUNCE_DELAY: 500
-        };
+            async wait() {
+                const now = Date.now();
+                const oneMinuteAgo = now - 60000;
+                
+                // Удаляем старые запросы
+                this.requests = this.requests.filter(time => time > oneMinuteAgo);
+                
+                if (this.requests.length >= this.maxRequestsPerMinute) {
+                    const oldestRequest = this.requests[0];
+                    const waitTime = 60000 - (now - oldestRequest);
+                    console.log(`Rate limit exceeded. Waiting ${waitTime}ms`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime + 100));
+                }
+                
+                this.requests.push(now);
+            }
 
-        // Класс для управления кэшем
+            reset() {
+                this.requests = [];
+            }
+        }
+
+        // Глобальный лимитер
+        const rateLimiter = new RateLimiter(REQUEST_CONFIG.MAX_REQUESTS_PER_MINUTE);
+
+        // Класс для управления кэшем - ОПТИМИЗИРОВАН
         class RequestCache {
             constructor() {
                 this.cache = new Map();
@@ -1998,25 +2066,110 @@
                 this.cache.delete(key);
                 this.saveToStorage();
             }
+
+            // Новый метод для очистки устаревших записей
+            clearExpired() {
+                const now = Date.now();
+                for (const [key, value] of this.cache.entries()) {
+                    if (now - value.timestamp > CACHE_CONFIG.TTL) {
+                        this.cache.delete(key);
+                    }
+                }
+                this.saveToStorage();
+            }
         }
 
-        // Утилиты для дебаунсинга
+        // Утилиты для дебаунсинга - ОПТИМИЗИРОВАНЫ
         class Debouncer {
             constructor(delay) {
                 this.delay = delay;
                 this.timeout = null;
+                this.lastCallTime = 0;
             }
 
             debounce(func) {
                 return (...args) => {
+                    const now = Date.now();
+                    const timeSinceLastCall = now - this.lastCallTime;
+                    
+                    // Если прошло больше времени, чем delay, выполняем сразу
+                    if (timeSinceLastCall > this.delay) {
+                        this.lastCallTime = now;
+                        func(...args);
+                        return;
+                    }
+                    
                     clearTimeout(this.timeout);
-                    this.timeout = setTimeout(() => func(...args), this.delay);
+                    this.timeout = setTimeout(() => {
+                        this.lastCallTime = Date.now();
+                        func(...args);
+                    }, this.delay);
                 };
             }
 
             cancel() {
                 clearTimeout(this.timeout);
+                this.timeout = null;
             }
+        }
+
+        // Утилита для форматирования URL - НОВАЯ ФУНКЦИЯ
+        function formatProxyUrl(proxyConfig, targetUrl) {
+            if (proxyConfig.format.includes('{}')) {
+                return proxyConfig.format.replace('{}', encodeURIComponent(targetUrl));
+            } else if (proxyConfig.format.includes('?url=')) {
+                return `${proxyConfig.format}${encodeURIComponent(targetUrl)}`;
+            } else {
+                return `${proxyConfig.format}${targetUrl}`;
+            }
+        }
+
+        // Утилита для обработки ошибок API - НОВАЯ ФУНКЦИЯ
+        function handleApiError(error, context) {
+            console.error(`Ошибка ${context}:`, error);
+            
+            if (error.name === 'AbortError') {
+                throw new Error('Превышено время ожидания ответа от сервера');
+            }
+            
+            if (error.message.includes('Failed to fetch')) {
+                throw new Error('Не удалось подключиться к серверу. Проверьте интернет-соединение');
+            }
+            
+            if (error.message.includes('404')) {
+                throw new Error('Запрошенный ресурс не найден на сервере');
+            }
+            
+            if (error.message.includes('500')) {
+                throw new Error('Внутренняя ошибка сервера. Попробуйте позже');
+            }
+            
+            throw error;
+        }
+
+        // Функция для отображения сообщений - НОВАЯ ФУНКЦИЯ
+        function showMessage(title, text, type = 'info') {
+            // Создаем элемент сообщения
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-notification ${type}`;
+            
+            messageDiv.innerHTML = `
+                <h4 style="margin-bottom: 5px; font-weight: 600;">${title}</h4>
+                <p style="margin: 0; opacity: 0.9;">${text}</p>
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            // Автоматическое удаление через 5 секунд
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                messageDiv.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                }, 300);
+            }, 5000);
         }
 
         // Текущие настройки
@@ -2108,6 +2261,9 @@
         const manualCheckUpdate = document.getElementById('manualCheckUpdate');
         const appVersion = document.getElementById('appVersion');
 
+        // Таймер бездействия
+        let inactivityTimer;
+
         // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
             loadSettings();
@@ -2139,14 +2295,14 @@
                             if (updateInfo) {
                                 showUpdateNotification(updateInfo);
                             } else {
-                                alert('У вас установлена последняя версия!');
+                                showMessage('Обновления не найдены', 'У вас установлена последняя версия!');
                             }
                         } else {
                             alert('Функция обновлений не доступна в текущем режиме');
                         }
                     } catch (error) {
                         console.error('Ошибка при проверке обновлений:', error);
-                        alert('Ошибка при проверке обновлений: ' + error.message);
+                        showMessage('Ошибка', 'Не удалось проверить обновления: ' + error.message);
                     } finally {
                         this.innerHTML = '<i class="fas fa-sync-alt"></i> Проверить обновления';
                         this.disabled = false;
@@ -2165,6 +2321,18 @@
                     }
                 });
             }
+            
+            // Очистка устаревшего кэша при загрузке
+            setTimeout(() => {
+                requestCache.clearExpired();
+            }, 1000);
+            
+            // Инициализация таймера бездействия
+            resetInactivityTimer();
+            
+            // Добавление обработчиков событий для сброса таймера бездействия
+            document.addEventListener('click', resetInactivityTimer);
+            document.addEventListener('keypress', resetInactivityTimer);
         });
 
         // Настройка слушателей для автообновления
@@ -2181,9 +2349,7 @@
                     console.log('Обновление завершено, перезагружаю приложение...');
                     
                     // Показываем сообщение и перезагружаем
-                    if (typeof showMessage === 'function') {
-                        showMessage('Обновление завершено', 'Приложение будет перезагружено через 2 секунды');
-                    }
+                    showMessage('Обновление завершено', 'Приложение будет перезагружено через 2 секунды');
                     
                     setTimeout(() => {
                         window.location.reload();
@@ -2329,7 +2495,12 @@
         }
 
         // Утилита для выполнения запросов
-        async function fetchWithRetryAndCache(url, options = {}, cacheKey = null, retryCount = REQUEST_CONFIG.MAX_RETRIES) {
+        async function fetchWithRetryAndCache(url, options = {}, cacheKey = null, requestType = 'general', retryCount = REQUEST_CONFIG.MAX_RETRIES) {
+            // Очищаем устаревшие записи в кэше при каждом 10-м запросе
+            if (Math.random() < 0.1) {
+                requestCache.clearExpired();
+            }
+            
             if (cacheKey) {
                 const cached = requestCache.get(cacheKey);
                 if (cached) {
@@ -2351,20 +2522,59 @@
                         
                         options.signal = controller.signal;
                         
+                        console.log(`Попытка ${i + 1} запроса к: ${url}`);
                         const response = await fetch(url, options);
                         clearTimeout(timeoutId);
                         
                         if (!response.ok) {
+                            // Обработка специфичных HTTP ошибок
+                            if (response.status === 429) {
+                                throw new Error('Слишком много запросов. Подождите немного.');
+                            }
+                            if (response.status === 502 || response.status === 503 || response.status === 504) {
+                                throw new Error('Сервер временно недоступен. Попробуйте позже.');
+                            }
                             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                         }
                         
-                        const data = await response.json();
+                        let data;
+                        const contentType = response.headers.get('content-type');
                         
-                        if (url.includes('corsproxy.io') || url.includes('allorigins.win')) {
-                            if (data.contents) {
+                        try {
+                            if (contentType && contentType.includes('application/json')) {
+                                data = await response.json();
+                            } else {
+                                const text = await response.text();
+                                // Пытаемся распарсить как JSON даже если заголовок не указан
                                 try {
-                                    return JSON.parse(data.contents);
-                                } catch (e) {}
+                                    data = JSON.parse(text);
+                                } catch (parseError) {
+                                    // Проверяем, не прокси ли это
+                                    if (text.includes('contents') && text.includes('status')) {
+                                        const parsed = JSON.parse(text);
+                                        if (parsed.contents) {
+                                            data = JSON.parse(parsed.contents);
+                                        } else {
+                                            data = parsed;
+                                        }
+                                    } else {
+                                        throw new Error('Сервер вернул некорректный формат данных');
+                                    }
+                                }
+                            }
+                        } catch (parseError) {
+                            console.error('Ошибка парсинга ответа:', parseError);
+                            throw new Error('Некорректный ответ от сервера');
+                        }
+                        
+                        // Проверка структуры ответа для разных типов запросов
+                        if (requestType === 'subscription') {
+                            if (!data || typeof data !== 'object') {
+                                throw new Error('Некорректная структура ответа от сервера подписки');
+                            }
+                        } else if (requestType === 'messages') {
+                            if (data === null || data === undefined) {
+                                throw new Error('Сервер вернул пустой ответ');
                             }
                         }
                         
@@ -2375,11 +2585,20 @@
                         return data;
                         
                     } catch (error) {
+                        console.error(`Ошибка при попытке ${i + 1}:`, error);
+                        
                         if (i === retryCount) {
-                            throw error;
+                            // Удаляем из кэша при ошибке
+                            if (cacheKey) {
+                                requestCache.delete(cacheKey);
+                            }
+                            handleApiError(error, `запроса ${requestType}`);
                         }
                         
-                        await new Promise(resolve => setTimeout(resolve, REQUEST_CONFIG.RETRY_DELAY * (i + 1)));
+                        // Увеличиваем задержку при каждой следующей попытке
+                        const delay = REQUEST_CONFIG.RETRY_DELAY * Math.pow(2, i);
+                        console.log(`Повторная попытка через ${delay}ms`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
                     }
                 }
             })();
@@ -2394,14 +2613,20 @@
             }
         }
 
-        // Оптимизированная функция загрузки подписки
+        // ОПТИМИЗИРОВАННАЯ функция загрузки подписки
         async function fetchSubscription(searchValue, subscriptionType, proxyType = null) {
             const proxyToUse = proxyType || currentSettings.proxy;
             const subscriptionConfig = SUBSCRIPTION_CONFIG[subscriptionType];
             
             if (!subscriptionConfig) throw new Error(`Неизвестный тип подписки: ${subscriptionType}`);
             
-            const targetUrl = `${MAIN_API_SERVER}${subscriptionConfig.path}${encodeURIComponent(searchValue)}`;
+            // Валидация входных данных
+            if (subscriptionConfig.validate && !subscriptionConfig.validate(searchValue)) {
+                throw new Error(`Некорректный формат для ${subscriptionConfig.name}`);
+            }
+            
+            const cleanedSearchValue = searchValue.replace(/\D/g, '');
+            const targetUrl = `${MAIN_API_SERVER}${subscriptionConfig.path}${cleanedSearchValue}`;
             const proxyConfig = PROXY_CONFIG[proxyToUse];
             
             if (!proxyConfig) throw new Error(`Неизвестный прокси: ${proxyToUse}`);
@@ -2410,36 +2635,40 @@
             if (proxyToUse === 'direct') {
                 url = targetUrl;
             } else {
-                if (proxyConfig.format.includes('{}')) {
-                    url = proxyConfig.format.replace('{}', targetUrl);
-                } else if (proxyConfig.format.includes('?url=')) {
-                    url = `${proxyConfig.format}${encodeURIComponent(targetUrl)}`;
-                } else {
-                    url = `${proxyConfig.format}${targetUrl}`;
-                }
+                url = formatProxyUrl(proxyConfig, targetUrl);
             }
             
             const cacheKey = generateCacheKey('subscription', {
                 type: subscriptionType,
-                value: searchValue,
+                value: cleanedSearchValue,
                 proxy: proxyToUse
             });
+            
+            // Применяем лимит запросов
+            await rateLimiter.wait();
             
             return fetchWithRetryAndCache(url, {
                 headers: {
                     'Accept': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Cache-Control': 'no-cache'
                 },
-                mode: 'cors'
-            }, cacheKey);
+                mode: 'cors',
+                cache: 'no-store'
+            }, cacheKey, 'subscription');
         }
 
-        // Оптимизированная функция загрузки сообщений
+        // ОПТИМИЗИРОВАННАЯ функция загрузки сообщений
         async function fetchMessages(searchValue, searchType, startDate = null, endDate = null, proxyType = null) {
             const proxyToUse = proxyType || currentSettings.proxy;
             const messagesConfig = MESSAGES_CONFIG[searchType];
             
             if (!messagesConfig) throw new Error(`Неизвестный тип поиска: ${searchType}`);
+            
+            // Валидация входных данных
+            if (messagesConfig.validate && !messagesConfig.validate(searchValue)) {
+                throw new Error(`Некорректный формат для ${messagesConfig.name}`);
+            }
             
             let targetUrl;
             if (searchType === 'message') {
@@ -2448,7 +2677,19 @@
                 if (!startDate || !endDate) throw new Error('Укажите обе даты');
                 if (new Date(endDate) < new Date(startDate)) throw new Error('Дата окончания не может быть меньше даты начала');
                 
-                targetUrl = `${messagesConfig.baseUrl}${messagesConfig.path}${searchValue}?start=${startDate}&end=${endDate}`;
+                // Ограничиваем период 30 днями для защиты сервера
+                const maxPeriodDays = 30;
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays > maxPeriodDays) {
+                    throw new Error(`Период поиска не может превышать ${maxPeriodDays} дней`);
+                }
+                
+                // Добавляем лимит результатов
+                const limitParam = messagesConfig.limit ? `&limit=${messagesConfig.limit}` : '';
+                targetUrl = `${messagesConfig.baseUrl}${messagesConfig.path}${searchValue}?start=${startDate}&end=${endDate}${limitParam}`;
             }
             
             const proxyConfig = PROXY_CONFIG[proxyToUse];
@@ -2459,13 +2700,7 @@
             if (proxyToUse === 'direct') {
                 url = targetUrl;
             } else {
-                if (proxyConfig.format.includes('{}')) {
-                    url = proxyConfig.format.replace('{}', targetUrl);
-                } else if (proxyConfig.format.includes('?url=')) {
-                    url = `${proxyConfig.format}${encodeURIComponent(targetUrl)}`;
-                } else {
-                    url = `${proxyConfig.format}${targetUrl}`;
-                }
+                url = formatProxyUrl(proxyConfig, targetUrl);
             }
             
             const cacheKey = generateCacheKey('messages', {
@@ -2476,13 +2711,18 @@
                 proxy: proxyToUse
             });
             
+            // Применяем лимит запросов
+            await rateLimiter.wait();
+            
             return fetchWithRetryAndCache(url, {
                 headers: {
                     'Accept': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Cache-Control': 'no-cache'
                 },
-                mode: 'cors'
-            }, cacheKey);
+                mode: 'cors',
+                cache: 'no-store'
+            }, cacheKey, 'messages');
         }
 
         // Загрузка настроек из localStorage
@@ -2768,7 +3008,7 @@
         function setDefaultDates() {
             const today = new Date();
             const weekAgo = new Date();
-            weekAgo.setDate(today.getDate() - 7);
+            weekAgo.setDate(today.getDate() - 7); // Ограничиваем 7 днями по умолчанию
             
             const formatDate = (date) => {
                 return date.toISOString().split('T')[0];
@@ -3147,8 +3387,6 @@
             }
 
             checkSubscription(searchValue, currentSettings.subscriptionType);
-            
-            incrementSubscriptionCount();
         }
 
         function performMessageIdSearch() {
@@ -3159,8 +3397,6 @@
             }
 
             loadMessagesData(searchValue, 'message');
-            
-            incrementMessageCount();
         }
 
         function performClientSearch() {
@@ -3188,8 +3424,6 @@
             }
             
             loadMessagesData(searchValue, searchType, startDate, endDate);
-            
-            incrementClientCount();
         }
 
         function performInsurantSearch() {
@@ -3217,27 +3451,151 @@
             }
             
             loadMessagesData(searchValue, searchType, startDate, endDate);
-            
-            incrementInsurantCount();
         }
 
+        // ОПТИМИЗИРОВАННАЯ функция проверки подписки
         async function checkSubscription(searchValue, subscriptionType) {
             subscriptionLoadingIndicator.classList.add('active');
             subscriptionErrorPanel.classList.remove('active');
             subscriptionResult.classList.remove('active');
             subscriptionResult.innerHTML = '';
+            
+            // Блокируем кнопку на время запроса
+            subscriptionButton.disabled = true;
+            subscriptionButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверяем...';
 
             try {
+                // Валидация перед запросом
+                const config = SUBSCRIPTION_CONFIG[subscriptionType];
+                if (config.validate && !config.validate(searchValue)) {
+                    throw new Error(`Некорректный формат для ${config.name}. Пример: ${config.example}`);
+                }
+                
                 const data = await fetchSubscription(searchValue, subscriptionType);
                 renderSubscriptionResult(data, searchValue, subscriptionType);
+                
+                // Увеличиваем счетчик только при успешном запросе
+                incrementSubscriptionCount();
                 
             } catch (error) {
                 console.error('Ошибка при проверке подписки:', error);
                 
-                showSubscriptionError(`Ошибка проверки подписки: ${error.message}`);
+                // Показываем пользователю понятное сообщение
+                let errorMessage = error.message;
+                if (error.message.includes('timeout') || error.message.includes('time out')) {
+                    errorMessage = 'Превышено время ожидания ответа от сервера. Попробуйте позже.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Не удалось подключиться к серверу. Проверьте интернет-соединение.';
+                } else if (error.message.includes('429')) {
+                    errorMessage = 'Слишком много запросов. Подождите 1-2 минуты.';
+                }
+                
+                showSubscriptionError(`Ошибка проверки подписки: ${errorMessage}`);
+                
+                // Показываем общее сообщение
+                showMessage('Ошибка проверки', errorMessage, 'error');
+                
             } finally {
                 subscriptionLoadingIndicator.classList.remove('active');
+                subscriptionButton.disabled = false;
+                subscriptionButton.innerHTML = '<i class="fas fa-search"></i> Проверить';
             }
+        }
+
+        // ОПТИМИЗИРОВАННАЯ функция загрузки сообщений
+        async function loadMessagesData(searchValue, searchType, startDate = null, endDate = null) {
+            messagesLoadingIndicator.classList.add('active');
+            messagesErrorPanel.classList.remove('active');
+            messagesNotFoundPanel.classList.remove('active');
+            messagesContentContainer.innerHTML = '';
+            
+            // Определяем, какая кнопка была нажата
+            let searchButton;
+            if (searchType === 'message') {
+                searchButton = messageIdButton;
+            } else if (searchType.startsWith('client')) {
+                searchButton = clientSearchButton;
+            } else if (searchType.startsWith('insurant')) {
+                searchButton = insurantSearchButton;
+            }
+            
+            // Блокируем кнопку на время запроса
+            if (searchButton) {
+                const originalText = searchButton.innerHTML;
+                searchButton.disabled = true;
+                searchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Поиск...';
+                
+                // Возвращаем оригинальный текст через finally
+                setTimeout(() => {
+                    if (searchButton) {
+                        searchButton.disabled = false;
+                        searchButton.innerHTML = originalText;
+                    }
+                }, 1000);
+            }
+
+            try {
+                // Валидация перед запросом
+                const config = MESSAGES_CONFIG[searchType];
+                if (config.validate && !config.validate(searchValue)) {
+                    throw new Error(`Некорректный формат для ${config.name}. Пример: ${config.example}`);
+                }
+                
+                const data = await fetchMessages(searchValue, searchType, startDate, endDate);
+                
+                if (searchType === 'message') {
+                    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+                        showMessagesNotFound(searchValue, searchType);
+                        return;
+                    }
+                    renderMessageData(data);
+                } else {
+                    renderDocumentsData(data, searchType, searchValue, startDate, endDate);
+                }
+                
+                // Увеличиваем счетчик только при успешном запросе
+                if (searchType === 'message') {
+                    incrementMessageCount();
+                } else if (searchType.startsWith('client')) {
+                    incrementClientCount();
+                } else if (searchType.startsWith('insurant')) {
+                    incrementInsurantCount();
+                }
+                
+            } catch (error) {
+                console.error('Ошибка при загрузке данных:', error);
+                
+                // Показываем пользователю понятное сообщение
+                let errorMessage = error.message;
+                if (error.message.includes('timeout') || error.message.includes('time out')) {
+                    errorMessage = 'Превышено время ожидания ответа от сервера. Попробуйте позже.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Не удалось подключиться к серверу. Проверьте интернет-соединение.';
+                } else if (error.message.includes('429')) {
+                    errorMessage = 'Слишком много запросов. Подождите 1-2 минуты.';
+                } else if (error.message.includes('404') || error.message.includes('Not Found') || 
+                           error.message.includes('не найдено')) {
+                    showMessagesNotFound(searchValue, searchType);
+                    return;
+                } else if (error.message.includes('превышать')) {
+                    // Сообщение об ограничении периода
+                    errorMessage = error.message;
+                }
+                
+                showMessagesError(`Ошибка загрузки данных: ${errorMessage}`);
+                
+                // Показываем общее сообщение
+                showMessage('Ошибка поиска', errorMessage, 'error');
+                
+            } finally {
+                messagesLoadingIndicator.classList.remove('active');
+            }
+        }
+
+        function showSubscriptionError(message) {
+            subscriptionErrorMessage.innerHTML = message;
+            subscriptionErrorPanel.classList.add('active');
+            subscriptionResult.classList.remove('active');
         }
 
         function renderSubscriptionResult(data, searchValue, subscriptionType) {
@@ -3393,46 +3751,6 @@
             
             subscriptionResult.innerHTML = html;
             subscriptionResult.classList.add('active');
-        }
-
-        function showSubscriptionError(message) {
-            subscriptionErrorMessage.innerHTML = message;
-            subscriptionErrorPanel.classList.add('active');
-            subscriptionResult.classList.remove('active');
-        }
-
-        async function loadMessagesData(searchValue, searchType, startDate = null, endDate = null) {
-            messagesLoadingIndicator.classList.add('active');
-            messagesErrorPanel.classList.remove('active');
-            messagesNotFoundPanel.classList.remove('active');
-            messagesContentContainer.innerHTML = '';
-
-            try {
-                const data = await fetchMessages(searchValue, searchType, startDate, endDate);
-                
-                if (searchType === 'message') {
-                    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
-                        showMessagesNotFound(searchValue, searchType);
-                        return;
-                    }
-                    renderMessageData(data);
-                } else {
-                    renderDocumentsData(data, searchType, searchValue, startDate, endDate);
-                }
-                
-            } catch (error) {
-                console.error('Ошибка при загрузке данных:', error);
-                
-                if (error.message.includes('404') || error.message.includes('Not Found') || 
-                    error.message.includes('не найдено')) {
-                    showMessagesNotFound(searchValue, searchType);
-                    return;
-                }
-                
-                showMessagesError(`Ошибка загрузки данных: ${error.message}`);
-            } finally {
-                messagesLoadingIndicator.classList.remove('active');
-            }
         }
 
         function showMessagesNotFound(searchValue, searchType) {
@@ -3686,6 +4004,15 @@
             }
             
             messagesContentContainer.innerHTML = html;
+        }
+
+        // Функция для сброса лимитера при бездействии
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                rateLimiter.reset();
+                console.log('Rate limiter reset due to inactivity');
+            }, 300000); // 5 минут бездействия
         }
     </script>
 </body>
