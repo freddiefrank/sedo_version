@@ -96,86 +96,141 @@
             --tab-inactive: #f8bbd9;
         }
 
-        /* Анимированные фоны за достижения */
-        .bg-achievement-gold {
+        /* Кнопка достижений в углу экрана */
+        .achievements-floating-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--achievement-color) 0%, var(--primary-color) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .achievements-floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .achievements-floating-btn:active {
+            transform: scale(0.95);
+        }
+
+        .achievements-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--secondary-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid var(--card-bg);
+        }
+
+        /* Модальное окно достижений */
+        .achievements-modal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
-            background: linear-gradient(-45deg, 
-                #ffd700 0%, 
-                #ffed4e 25%, 
-                #fff8a6 50%, 
-                #ffed4e 75%, 
-                #ffd700 100%);
-            background-size: 400% 400%;
-            animation: gradientGold 8s ease infinite;
-            opacity: 0.15;
-            display: none;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
         }
 
-        .bg-achievement-silver {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(-45deg, 
-                #c0c0c0 0%, 
-                #e8e8e8 25%, 
-                #f0f0f0 50%, 
-                #e8e8e8 75%, 
-                #c0c0c0 100%);
-            background-size: 400% 400%;
-            animation: gradientSilver 10s ease infinite;
-            opacity: 0.12;
-            display: none;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .bg-achievement-bronze {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(-45deg, 
-                #cd7f32 0%, 
-                #e6a15c 25%, 
-                #f0c690 50%, 
-                #e6a15c 75%, 
-                #cd7f32 100%);
-            background-size: 400% 400%;
-            animation: gradientBronze 12s ease infinite;
-            opacity: 0.12;
-            display: none;
+        .achievements-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .bg-achievement-rainbow {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(-45deg, 
-                #ff0000 0%, 
-                #ff9900 17%, 
-                #ffff00 33%, 
-                #00ff00 50%, 
-                #00ffff 67%, 
-                #0000ff 83%, 
-                #9900ff 100%);
-            background-size: 400% 400%;
-            animation: gradientRainbow 20s ease infinite;
-            opacity: 0.08;
-            display: none;
+        .achievements-modal-content {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
         }
 
-        .bg-achievement-particle {
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .achievements-modal-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .achievements-modal-header h2 {
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .achievements-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .achievements-modal-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .achievements-modal-body {
+            padding: 20px;
+        }
+
+        /* Анимированные фоны - ЛАВА */
+        .bg-lava {
             position: fixed;
             top: 0;
             left: 0;
@@ -186,69 +241,166 @@
             display: none;
         }
 
-        .particle {
+        .bg-lava.active {
+            display: block;
+        }
+
+        .lava-blob {
             position: absolute;
-            background: var(--primary-light);
             border-radius: 50%;
-            animation: floatParticle 20s infinite linear;
-            opacity: 0.1;
-            filter: blur(1px);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--achievement-color) 50%, var(--secondary-color) 100%);
+            filter: blur(40px);
+            opacity: 0.6;
+            mix-blend-mode: multiply;
         }
 
-        .particle:nth-child(3n) {
-            background: var(--secondary-color);
-            animation-duration: 25s;
+        .lava-blob:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 20%;
+            left: 10%;
+            animation: lavaFloat1 20s infinite ease-in-out;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
         }
 
-        .particle:nth-child(5n) {
-            background: var(--achievement-color);
-            animation-duration: 15s;
-            opacity: 0.15;
+        .lava-blob:nth-child(2) {
+            width: 400px;
+            height: 400px;
+            bottom: 10%;
+            right: 15%;
+            animation: lavaFloat2 25s infinite ease-in-out;
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
         }
 
-        @keyframes gradientGold {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .lava-blob:nth-child(3) {
+            width: 350px;
+            height: 350px;
+            top: 60%;
+            left: 30%;
+            animation: lavaFloat3 30s infinite ease-in-out;
+            background: linear-gradient(135deg, #ffd166 0%, #ffb347 100%);
         }
 
-        @keyframes gradientSilver {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .lava-blob:nth-child(4) {
+            width: 250px;
+            height: 250px;
+            top: 10%;
+            right: 25%;
+            animation: lavaFloat4 22s infinite ease-in-out;
+            background: linear-gradient(135deg, #9d4edd 0%, #7b2cbf 100%);
         }
 
-        @keyframes gradientBronze {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .lava-blob:nth-child(5) {
+            width: 320px;
+            height: 320px;
+            bottom: 30%;
+            left: 20%;
+            animation: lavaFloat5 28s infinite ease-in-out;
+            background: linear-gradient(135deg, #00bbf9 0%, #00b4d8 100%);
         }
 
-        @keyframes gradientRainbow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        @keyframes lavaFloat1 {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            }
+            25% {
+                transform: translate(50px, -80px) scale(1.2);
+                border-radius: 40% 60% 70% 30% / 40% 70% 30% 60%;
+            }
+            50% {
+                transform: translate(100px, 30px) scale(0.9);
+                border-radius: 70% 30% 50% 50% / 30% 50% 50% 70%;
+            }
+            75% {
+                transform: translate(-30px, 60px) scale(1.1);
+                border-radius: 30% 70% 60% 40% / 70% 60% 40% 30%;
+            }
         }
 
-        @keyframes floatParticle {
+        @keyframes lavaFloat2 {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%;
+            }
+            33% {
+                transform: translate(-80px, 40px) scale(1.3);
+                border-radius: 80% 20% 75% 25% / 20% 75% 25% 80%;
+            }
+            66% {
+                transform: translate(60px, -60px) scale(0.8);
+                border-radius: 25% 75% 80% 20% / 75% 20% 25% 80%;
+            }
+        }
+
+        @keyframes lavaFloat3 {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                border-radius: 40% 60% 70% 30% / 60% 40% 30% 70%;
+            }
+            25% {
+                transform: translate(-100px, -30px) scale(1.4);
+                border-radius: 60% 40% 30% 70% / 40% 60% 70% 30%;
+            }
+            50% {
+                transform: translate(70px, 90px) scale(0.7);
+                border-radius: 30% 70% 40% 60% / 70% 30% 60% 40%;
+            }
+            75% {
+                transform: translate(-40px, -70px) scale(1.2);
+                border-radius: 70% 30% 60% 40% / 30% 70% 40% 60%;
+            }
+        }
+
+        @keyframes lavaFloat4 {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                border-radius: 55% 45% 35% 65% / 55% 35% 65% 45%;
+            }
+            50% {
+                transform: translate(120px, -40px) scale(1.1);
+                border-radius: 45% 55% 65% 35% / 35% 65% 45% 55%;
+            }
+        }
+
+        @keyframes lavaFloat5 {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                border-radius: 65% 35% 75% 25% / 35% 75% 25% 65%;
+            }
+            33% {
+                transform: translate(-60px, 80px) scale(1.3);
+                border-radius: 35% 65% 25% 75% / 75% 25% 65% 35%;
+            }
+            66% {
+                transform: translate(90px, -20px) scale(0.9);
+                border-radius: 75% 25% 65% 35% / 25% 65% 35% 75%;
+            }
+        }
+
+        /* Эффект пузырьков */
+        .lava-bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: bubbleFloat 15s infinite linear;
+        }
+
+        @keyframes bubbleFloat {
             0% {
-                transform: translateY(100vh) translateX(-50px) rotate(0deg);
+                transform: translateY(100vh) translateX(0) scale(0);
                 opacity: 0;
             }
             10% {
-                opacity: 0.1;
+                opacity: 0.5;
             }
             90% {
-                opacity: 0.1;
+                opacity: 0.5;
             }
             100% {
-                transform: translateY(-100px) translateX(calc(100vw + 50px)) rotate(360deg);
+                transform: translateY(-100px) translateX(calc(100vw + 50px)) scale(1);
                 opacity: 0;
             }
-        }
-
-        .achievement-background-active {
-            display: block !important;
         }
 
         /* Улучшенные превью фонов */
@@ -269,83 +421,60 @@
             100% { background-position: 0% 50%; }
         }
 
-        .background-preview.bg-achievement-gold {
-            background: linear-gradient(-45deg, 
-                #ffd700 0%, 
-                #ffed4e 25%, 
-                #fff8a6 50%, 
-                #ffed4e 75%, 
-                #ffd700 100%);
-        }
-
-        .background-preview.bg-achievement-silver {
-            background: linear-gradient(-45deg, 
-                #c0c0c0 0%, 
-                #e8e8e8 25%, 
-                #f0f0f0 50%, 
-                #e8e8e8 75%, 
-                #c0c0c0 100%);
-        }
-
-        .background-preview.bg-achievement-bronze {
-            background: linear-gradient(-45deg, 
-                #cd7f32 0%, 
-                #e6a15c 25%, 
-                #f0c690 50%, 
-                #e6a15c 75%, 
-                #cd7f32 100%);
-        }
-
-        .background-preview.bg-achievement-rainbow {
-            background: linear-gradient(-45deg, 
-                #ff0000 0%, 
-                #ff9900 17%, 
-                #ffff00 33%, 
-                #00ff00 50%, 
-                #00ffff 67%, 
-                #0000ff 83%, 
-                #9900ff 100%);
-        }
-
-        .background-preview.bg-achievement-particle {
-            background: var(--background-color);
+        .background-preview.bg-lava {
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #ffd166 50%, #9d4edd 75%, #00bbf9 100%);
             position: relative;
             overflow: hidden;
         }
 
-        .background-preview.bg-achievement-particle::before {
+        .background-preview.bg-lava::before {
             content: '';
             position: absolute;
             top: 10px;
             left: 10px;
-            width: 8px;
-            height: 8px;
-            background: var(--primary-light);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
             border-radius: 50%;
-            animation: previewParticle 3s linear infinite;
-            opacity: 0.6;
+            animation: previewLava1 3s ease infinite;
+            opacity: 0.7;
+            filter: blur(5px);
         }
 
-        .background-preview.bg-achievement-particle::after {
+        .background-preview.bg-lava::after {
             content: '';
             position: absolute;
-            top: 25px;
-            right: 15px;
-            width: 6px;
-            height: 6px;
-            background: var(--secondary-color);
+            bottom: 15px;
+            right: 20px;
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
             border-radius: 50%;
-            animation: previewParticle 4s linear infinite;
-            animation-delay: 1s;
-            opacity: 0.6;
+            animation: previewLava2 4s ease infinite;
+            opacity: 0.7;
+            filter: blur(5px);
         }
 
-        @keyframes previewParticle {
-            0% { transform: translateX(0) translateY(0); }
-            25% { transform: translateX(10px) translateY(-5px); }
-            50% { transform: translateX(20px) translateY(0); }
-            75% { transform: translateX(10px) translateY(5px); }
-            100% { transform: translateX(0) translateY(0); }
+        @keyframes previewLava1 {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            }
+            50% {
+                transform: translate(15px, -5px) scale(1.2);
+                border-radius: 40% 60% 70% 30% / 40% 70% 30% 60%;
+            }
+        }
+
+        @keyframes previewLava2 {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+                border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%;
+            }
+            50% {
+                transform: translate(-10px, 8px) scale(1.3);
+                border-radius: 80% 20% 75% 25% / 20% 75% 25% 80%;
+            }
         }
 
         .background-name {
@@ -1327,16 +1456,82 @@
                 right: 10px;
                 max-width: none;
             }
+            
+            .achievements-floating-btn {
+                bottom: 15px;
+                right: 15px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .achievements-badge {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+            }
+            
+            .achievements-modal-content {
+                width: 95%;
+            }
         }
     </style>
 </head>
 <body class="theme-default">
-    <!-- Анимированные фоны за достижения -->
-    <div class="bg-achievement-gold" id="bgGold"></div>
-    <div class="bg-achievement-silver" id="bgSilver"></div>
-    <div class="bg-achievement-bronze" id="bgBronze"></div>
-    <div class="bg-achievement-rainbow" id="bgRainbow"></div>
-    <div class="bg-achievement-particle" id="bgParticle"></div>
+    <!-- Анимированный фон ЛАВА -->
+    <div class="bg-lava" id="bgLava">
+        <div class="lava-blob"></div>
+        <div class="lava-blob"></div>
+        <div class="lava-blob"></div>
+        <div class="lava-blob"></div>
+        <div class="lava-blob"></div>
+    </div>
+    
+    <!-- Плавающая кнопка достижений -->
+    <div class="achievements-floating-btn" id="achievementsFloatBtn">
+        <i class="fas fa-trophy"></i>
+        <div class="achievements-badge" id="achievementsFloatBadge">0</div>
+    </div>
+    
+    <!-- Модальное окно достижений -->
+    <div class="achievements-modal" id="achievementsModal">
+        <div class="achievements-modal-content">
+            <div class="achievements-modal-header">
+                <h2><i class="fas fa-trophy"></i> Достижения</h2>
+                <button class="achievements-modal-close" id="achievementsModalClose">&times;</button>
+            </div>
+            <div class="achievements-modal-body">
+                <!-- Статистика -->
+                <div class="info-grid" style="margin-bottom: 20px;">
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-trophy"></i> Всего достижений</div>
+                        <div class="info-value">4</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-star"></i> Ваш прогресс</div>
+                        <div class="info-value" id="achievementsProgress">0%</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-search"></i> Всего проверок</div>
+                        <div class="info-value" id="totalChecks">0</div>
+                    </div>
+                </div>
+                
+                <!-- Список достижений -->
+                <div id="achievementsList">
+                    <!-- Достижения будут загружены через JavaScript -->
+                </div>
+                
+                <!-- Выбор фона -->
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                    <h3 class="settings-title"><i class="fas fa-image"></i> Анимированный фон "Лава"</h3>
+                    <div class="theme-selector" id="backgroundSelector">
+                        <!-- Фоны будут добавляться динамически -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div class="container">
         <!-- Панель настроек -->
@@ -1371,14 +1566,6 @@
                     </div>
                 </div>
                 
-                <!-- Выбор анимированного фона -->
-                <div id="backgroundSelectorContainer" style="display: none;">
-                    <h3 class="settings-title"><i class="fas fa-image"></i> Анимированные фоны за достижения</h3>
-                    <div class="theme-selector" id="backgroundSelector">
-                        <!-- Фоны будут добавляться динамически -->
-                    </div>
-                </div>
-                
                 <!-- Статистика -->
                 <div class="info-grid">
                     <div class="info-item">
@@ -1387,7 +1574,7 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-search"></i> Всего проверок</div>
-                        <div class="info-value" id="totalChecks">0</div>
+                        <div class="info-value" id="totalChecks2">0</div>
                     </div>
                 </div>
                 
@@ -1395,7 +1582,7 @@
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-sync-alt"></i> Версия приложения</div>
-                        <div class="info-value" id="appVersion">1.0.9</div>
+                        <div class="info-value" id="appVersion">1.1.0</div>
                     </div>
                     <button id="manualCheckUpdate" class="search-btn" style="width: 100%; margin-top: 10px;">
                         <i class="fas fa-sync-alt"></i> Проверить обновления
@@ -1430,9 +1617,6 @@
             </button>
             <button class="tab active" data-tab="subscription">
                 <i class="fas fa-user-check"></i> Проверка подписки
-            </button>
-            <button class="tab" data-tab="achievements">
-                <i class="fas fa-trophy"></i> Достижения
             </button>
         </div>
         
@@ -1610,33 +1794,6 @@
             </div>
         </div>
         
-        <!-- Вкладка 3: Достижения -->
-        <div id="achievements-tab" class="tab-content">
-            <div class="search-panel">
-                <h2 class="search-title"><i class="fas fa-trophy"></i> Достижения системы</h2>
-                
-                <div class="info-grid" style="margin-bottom: 20px;">
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-trophy"></i> Всего достижений</div>
-                        <div class="info-value">4</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-star"></i> Ваш прогресс</div>
-                        <div class="info-value" id="achievementsProgress">0%</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label"><i class="fas fa-desktop"></i> Хранилище</div>
-                        <div class="info-value">Только на этом устройстве</div>
-                    </div>
-                </div>
-                
-                <!-- Список достижений -->
-                <div id="achievementsList">
-                    <!-- Достижения будут загружены через JavaScript -->
-                </div>
-            </div>
-        </div>
-        
         <!-- Подвал -->
         <div class="footer">
             <p>Система мониторинга сообщений СЭДО | Тема: <span id="currentThemeName">Светлая</span></p>
@@ -1651,7 +1808,7 @@
         // Режим работы приложения (true - использовать fallback-данные при ошибке)
         let USE_FALLBACK_MODE = false;
 
-        // Конфигурация прокси - ОПТИМИЗИРОВАНА
+        // Конфигурация прокси
         const PROXY_CONFIG = {
             'direct': {
                 name: 'Прямое подключение к API',
@@ -1691,7 +1848,7 @@
             }
         };
 
-        // Конфигурация поиска сообщений - ОПТИМИЗИРОВАНА
+        // Конфигурация поиска сообщений
         const MESSAGES_CONFIG = {
             'message': {
                 name: 'Поиск по ID сообщения',
@@ -1765,7 +1922,7 @@
             }
         };
 
-        // === КОНФИГУРАЦИЯ ОПТИМИЗАЦИИ ===
+        // Конфигурация оптимизации
         const CACHE_CONFIG = {
             TTL: 5 * 60 * 1000,
             MAX_ITEMS: 100,
@@ -1781,7 +1938,7 @@
             MAX_REQUESTS_PER_MINUTE: 60
         };
 
-        // === КОНФИГУРАЦИЯ CIRCUIT BREAKER ===
+        // Circuit Breaker конфигурация
         const CIRCUIT_BREAKER_CONFIG = {
             MAX_CONSECUTIVE_ERRORS: 2,
             OPEN_STATE_TIMEOUT: 30000,
@@ -1983,42 +2140,14 @@
             }
         };
 
-        // Анимированные фоны за достижения
+        // Анимированные фоны
         const ACHIEVEMENT_BACKGROUNDS = {
-            'bgGold': {
-                id: 'bgGold',
-                name: 'Золотой градиент',
-                description: 'За получение всех достижений',
-                unlockRequirement: 'unlockAll',
-                previewClass: 'bg-achievement-gold'
-            },
-            'bgSilver': {
-                id: 'bgSilver',
-                name: 'Серебряный градиент',
-                description: 'За получение 3 достижений',
-                unlockRequirement: 'unlock3',
-                previewClass: 'bg-achievement-silver'
-            },
-            'bgBronze': {
-                id: 'bgBronze',
-                name: 'Бронзовый градиент',
-                description: 'За получение 2 достижений',
-                unlockRequirement: 'unlock2',
-                previewClass: 'bg-achievement-bronze'
-            },
-            'bgRainbow': {
-                id: 'bgRainbow',
-                name: 'Радужный градиент',
-                description: 'За выполнение 50 проверок',
-                unlockRequirement: 'totalChecks50',
-                previewClass: 'bg-achievement-rainbow'
-            },
-            'bgParticle': {
-                id: 'bgParticle',
-                name: 'Частицы',
-                description: 'За выполнение 100 проверок',
-                unlockRequirement: 'totalChecks100',
-                previewClass: 'bg-achievement-particle'
+            'bgLava': {
+                id: 'bgLava',
+                name: 'Эффект лавы',
+                description: 'Плавные цветные шары, имитирующие лава-лампу',
+                unlockRequirement: 'unlockAny',
+                previewClass: 'bg-lava'
             }
         };
 
@@ -2031,7 +2160,7 @@
                 icon: 'fa-user-check',
                 target: 10,
                 type: 'subscription',
-                backgroundReward: 'bgBronze'
+                backgroundReward: 'bgLava'
             },
             'message_explorer': {
                 id: 'message_explorer',
@@ -2062,7 +2191,7 @@
             }
         };
 
-        // === CIRCUIT BREAKER ФУНКЦИИ ===
+        // Circuit Breaker функции
         function getServerFromUrl(url) {
             if (url.includes(MAIN_API_SERVER)) {
                 return 'main';
@@ -2277,7 +2406,7 @@
             }
         }
 
-        // ОПТИМИЗИРОВАННАЯ функция с повторными попытками, кэшированием и fallback
+        // Оптимизированная функция с повторными попытками, кэшированием и fallback
         async function fetchWithRetryAndCache(url, options = {}, cacheKey = null, requestType = 'general', retryCount = REQUEST_CONFIG.MAX_RETRIES) {
             if (cacheKey) {
                 const cached = requestCache.get(cacheKey);
@@ -2343,7 +2472,7 @@
             }
         }
 
-        // ОПТИМИЗИРОВАННАЯ функция загрузки подписки
+        // Оптимизированная функция загрузки подписки
         async function fetchSubscription(searchValue, subscriptionType, proxyType = null) {
             const proxyToUse = proxyType || currentSettings.proxy;
             const subscriptionConfig = SUBSCRIPTION_CONFIG[subscriptionType];
@@ -2378,7 +2507,7 @@
             }, cacheKey, 'subscription');
         }
 
-        // ОПТИМИЗИРОВАННАЯ функция загрузки сообщений
+        // Оптимизированная функция загрузки сообщений
         async function fetchMessages(searchValue, searchType, startDate = null, endDate = null, proxyType = null) {
             const proxyToUse = proxyType || currentSettings.proxy;
             const messagesConfig = MESSAGES_CONFIG[searchType];
@@ -2502,13 +2631,19 @@
         const achievementsList = document.getElementById('achievementsList');
         const achievementsCount = document.getElementById('achievementsCount');
         const totalChecks = document.getElementById('totalChecks');
+        const totalChecks2 = document.getElementById('totalChecks2');
         const achievementsProgress = document.getElementById('achievementsProgress');
-        const backgroundSelectorContainer = document.getElementById('backgroundSelectorContainer');
         const backgroundSelector = document.getElementById('backgroundSelector');
         
         const tabs = document.querySelectorAll('.tab');
         const tabContents = document.querySelectorAll('.tab-content');
         const subsections = document.querySelectorAll('.subsection');
+
+        // Новые элементы для плавающей кнопки и модального окна
+        const achievementsFloatBtn = document.getElementById('achievementsFloatBtn');
+        const achievementsFloatBadge = document.getElementById('achievementsFloatBadge');
+        const achievementsModal = document.getElementById('achievementsModal');
+        const achievementsModalClose = document.getElementById('achievementsModalClose');
 
         // Элементы для автообновления
         const manualCheckUpdate = document.getElementById('manualCheckUpdate');
@@ -2530,8 +2665,10 @@
             updateBackgroundSelector();
             applyActiveBackground();
             
-            createParticles();
             setupAnimationOptimization();
+            
+            // Настройка плавающей кнопки и модального окна
+            setupAchievementsButton();
             
             // Проверка доступности сервера при загрузке
             checkInitialConnection();
@@ -2539,6 +2676,42 @@
             // Запускаем периодическую проверку здоровья серверов
             startHealthChecks();
         });
+
+        // Настройка плавающей кнопки достижений
+        function setupAchievementsButton() {
+            achievementsFloatBtn.addEventListener('click', function() {
+                openAchievementsModal();
+            });
+            
+            achievementsModalClose.addEventListener('click', function() {
+                closeAchievementsModal();
+            });
+            
+            // Закрытие модального окна при клике вне его
+            achievementsModal.addEventListener('click', function(event) {
+                if (event.target === achievementsModal) {
+                    closeAchievementsModal();
+                }
+            });
+            
+            // Закрытие по ESC
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && achievementsModal.classList.contains('active')) {
+                    closeAchievementsModal();
+                }
+            });
+        }
+
+        function openAchievementsModal() {
+            achievementsModal.classList.add('active');
+            renderAchievements();
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAchievementsModal() {
+            achievementsModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
 
         // Периодическая проверка здоровья серверов
         function startHealthChecks() {
@@ -2576,8 +2749,8 @@
             const warningDiv = document.createElement('div');
             warningDiv.className = 'message-notification warning';
             warningDiv.innerHTML = `
-                <h4 style="margin-bottom: 5px; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Проблемы с подключением</h4>
-                <p style="margin-bottom: 10px;">Сервер СЭДО недоступен. Проверьте подключение к интернету.</p>
+                <h4 style="margin-bottom: 5px; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Данные загружаются</h4>
+                <p style="margin-bottom: 10px;">Сервис подключается к API пожалуйста подождите.</p>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <button id="tryAgainBtn" style="
                         background: var(--primary-color);
@@ -2752,10 +2925,6 @@
                     
                     currentSettings.currentTab = tabId;
                     saveSettings();
-                    
-                    if (tabId === 'achievements') {
-                        renderAchievements();
-                    }
                 });
             });
             
@@ -3001,10 +3170,12 @@
                          userStats.clientSearches + userStats.insurantSearches;
             
             totalChecks.textContent = total;
+            totalChecks2.textContent = total;
             
             const unlockedCount = userStats.unlockedAchievements.length;
             const totalAchievements = Object.keys(ACHIEVEMENTS).length;
             achievementsCount.textContent = `${unlockedCount}/${totalAchievements}`;
+            achievementsFloatBadge.textContent = unlockedCount;
             
             const progress = Math.round((unlockedCount / totalAchievements) * 100);
             achievementsProgress.textContent = `${progress}%`;
@@ -3026,6 +3197,11 @@
                     if (!userStats.unlockedAchievements.includes(check.id)) {
                         userStats.unlockedAchievements.push(check.id);
                         newAchievements.push(achievement);
+                        
+                        // Разблокируем фон если есть награда
+                        if (achievement.backgroundReward && !userStats.unlockedBackgrounds.includes(achievement.backgroundReward)) {
+                            userStats.unlockedBackgrounds.push(achievement.backgroundReward);
+                        }
                     }
                 }
             });
@@ -3041,7 +3217,7 @@
             updateStatsDisplay();
             updateBackgroundSelector();
             
-            if (currentSettings.currentTab === 'achievements') {
+            if (achievementsModal.classList.contains('active')) {
                 renderAchievements();
             }
         }
@@ -3058,16 +3234,13 @@
         }
 
         function updateBackgroundSelector() {
-            if (!backgroundSelector || !backgroundSelectorContainer) return;
+            if (!backgroundSelector) return;
             
             const unlockedCount = userStats.unlockedBackgrounds.length;
             
             if (unlockedCount === 0) {
-                backgroundSelectorContainer.style.display = 'none';
                 return;
             }
-            
-            backgroundSelectorContainer.style.display = 'block';
             
             let html = '';
             
@@ -3086,7 +3259,7 @@
                     const isActive = currentSettings.activeBackground === bgId;
                     html += `
                         <div class="theme-option ${isActive ? 'active' : ''}" data-background="${bgId}">
-                            <div class="background-preview ${background.previewClass} achievement-background-active">
+                            <div class="background-preview ${background.previewClass}">
                                 <div class="background-name">${background.name}</div>
                             </div>
                             <div>${background.name}</div>
@@ -3123,10 +3296,10 @@
         function activateBackground(bgId) {
             const backgroundElement = document.getElementById(bgId);
             if (backgroundElement) {
-                backgroundElement.classList.add('achievement-background-active');
+                backgroundElement.classList.add('active');
                 
-                if (bgId === 'bgParticle') {
-                    createParticles();
+                if (bgId === 'bgLava') {
+                    createLavaBubbles();
                 }
             }
         }
@@ -3135,12 +3308,11 @@
             Object.keys(ACHIEVEMENT_BACKGROUNDS).forEach(bgId => {
                 const backgroundElement = document.getElementById(bgId);
                 if (backgroundElement) {
-                    backgroundElement.classList.remove('achievement-background-active');
+                    backgroundElement.classList.remove('active');
                     
-                    if (bgId === 'bgParticle') {
-                        const particleContainer = document.getElementById('bgParticle');
-                        const particles = particleContainer.querySelectorAll('.particle');
-                        particles.forEach(particle => particle.remove());
+                    if (bgId === 'bgLava') {
+                        const bubbles = backgroundElement.querySelectorAll('.lava-bubble');
+                        bubbles.forEach(bubble => bubble.remove());
                     }
                 }
             });
@@ -3152,33 +3324,42 @@
             }
         }
 
-        function createParticles() {
-            const particleContainer = document.getElementById('bgParticle');
-            if (!particleContainer || !particleContainer.classList.contains('achievement-background-active')) {
+        function createLavaBubbles() {
+            const lavaContainer = document.getElementById('bgLava');
+            if (!lavaContainer || !lavaContainer.classList.contains('active')) {
                 return;
             }
             
-            const oldParticles = particleContainer.querySelectorAll('.particle');
-            oldParticles.forEach(particle => particle.remove());
+            const oldBubbles = lavaContainer.querySelectorAll('.lava-bubble');
+            oldBubbles.forEach(bubble => bubble.remove());
             
-            const particleCount = 20;
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
+            const bubbleCount = 10;
+            for (let i = 0; i < bubbleCount; i++) {
+                const bubble = document.createElement('div');
+                bubble.classList.add('lava-bubble');
                 
                 const size = Math.random() * 15 + 5;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
                 
-                particle.style.left = `${Math.random() * 100}%`;
-                particle.style.top = `${Math.random() * 100}%`;
+                bubble.style.left = `${Math.random() * 100}%`;
+                bubble.style.bottom = '-20px';
                 
-                particle.style.opacity = Math.random() * 0.2 + 0.05;
+                bubble.style.opacity = Math.random() * 0.4 + 0.2;
                 
-                particle.style.animationDelay = `${Math.random() * 5}s`;
-                particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                const colors = [
+                    'rgba(255, 107, 107, 0.4)',
+                    'rgba(78, 205, 196, 0.4)',
+                    'rgba(255, 209, 102, 0.4)',
+                    'rgba(157, 78, 221, 0.4)',
+                    'rgba(0, 187, 249, 0.4)'
+                ];
+                bubble.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 
-                particleContainer.appendChild(particle);
+                bubble.style.animationDelay = `${Math.random() * 5}s`;
+                bubble.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                
+                lavaContainer.appendChild(bubble);
             }
         }
 
@@ -3885,17 +4066,35 @@
         }
 
         function pauseBackgroundAnimations() {
-            const backgrounds = document.querySelectorAll('.bg-achievement-gold, .bg-achievement-silver, .bg-achievement-bronze, .bg-achievement-rainbow');
-            backgrounds.forEach(bg => {
-                bg.style.animationPlayState = 'paused';
-            });
+            const lava = document.getElementById('bgLava');
+            if (lava) {
+                const blobs = lava.querySelectorAll('.lava-blob');
+                const bubbles = lava.querySelectorAll('.lava-bubble');
+                
+                blobs.forEach(blob => {
+                    blob.style.animationPlayState = 'paused';
+                });
+                
+                bubbles.forEach(bubble => {
+                    bubble.style.animationPlayState = 'paused';
+                });
+            }
         }
 
         function resumeBackgroundAnimations() {
-            const backgrounds = document.querySelectorAll('.bg-achievement-gold, .bg-achievement-silver, .bg-achievement-bronze, .bg-achievement-rainbow');
-            backgrounds.forEach(bg => {
-                bg.style.animationPlayState = 'running';
-            });
+            const lava = document.getElementById('bgLava');
+            if (lava) {
+                const blobs = lava.querySelectorAll('.lava-blob');
+                const bubbles = lava.querySelectorAll('.lava-bubble');
+                
+                blobs.forEach(blob => {
+                    blob.style.animationPlayState = 'running';
+                });
+                
+                bubbles.forEach(bubble => {
+                    bubble.style.animationPlayState = 'running';
+                });
+            }
         }
     </script>
 </body>
