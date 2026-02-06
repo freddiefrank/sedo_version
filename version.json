@@ -1,6 +1,6 @@
 {
   "version": "1.0.1",
   "last_updated": "2026-02-06",
-  "update_url": "https://github.com/freddiefrank/sedo_version/blob/main/index.html",
+  "update_url": "https://raw.githubusercontent.com/freddiefrank/sedo_version/refs/heads/main/index.html?token=GHSAT0AAAAAADU5ORZBLHWLFOJ66LSOYLQ62MFVZ7A",
   "changelog": "Добавлена система автообновлений, исправлены ошибки"
 }
