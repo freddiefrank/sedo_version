@@ -1635,160 +1635,6 @@
     </div>
 
     <script>
-        // === КОНФИГУРАЦИЯ АВТООБНОВЛЕНИЯ ===
-        const UPDATE_CONFIG = {
-            // URL для проверки версии (замените на ваш реальный URL)
-            versionUrl: 'https://raw.githubusercontent.com/freddiefrank/sedo_version/refs/heads/main/version.json?token=GHSAT0AAAAAADU5ORZATOMLR5QRRCCQRWGU2MFV3MQ',
-            // Текущая версия приложения (менять при каждом обновлении!)
-            currentVersion: '1.0.1',
-            // Интервал проверки обновлений (24 часа)
-            checkInterval: 24 * 60 * 60 * 1000,
-            // Принудительная проверка при запуске
-            checkOnStartup: true
-        };
-
-        // === СИСТЕМА АВТООБНОВЛЕНИЯ ===
-        class AutoUpdater {
-            constructor() {
-                this.lastCheck = localStorage.getItem('lastUpdateCheck');
-                this.ignoredVersion = localStorage.getItem('ignoredUpdateVersion');
-                this.setupAutoUpdate();
-            }
-
-            async setupAutoUpdate() {
-                // Проверяем обновления при старте
-                if (UPDATE_CONFIG.checkOnStartup) {
-                    await this.checkForUpdates();
-                }
-
-                // Проверяем по расписанию
-                setInterval(() => this.checkForUpdates(), UPDATE_CONFIG.checkInterval);
-            }
-
-            async checkForUpdates() {
-                try {
-                    console.log('Проверяем наличие обновлений...');
-                    
-                    const response = await fetch(UPDATE_CONFIG.versionUrl, {
-                        cache: 'no-cache',
-                        headers: { 'Cache-Control': 'no-cache' }
-                    });
-                    
-                    if (!response.ok) throw new Error('Не удалось проверить обновления');
-                    
-                    const updateInfo = await response.json();
-                    
-                    // Если версия на сервере новее
-                    if (this.compareVersions(updateInfo.version, UPDATE_CONFIG.currentVersion) > 0) {
-                        // Если пользователь не игнорировал это обновление
-                        if (this.ignoredVersion !== updateInfo.version) {
-                            this.showUpdateNotification(updateInfo);
-                        }
-                    }
-                    
-                    localStorage.setItem('lastUpdateCheck', Date.now().toString());
-                    
-                } catch (error) {
-                    console.warn('Ошибка проверки обновлений:', error);
-                }
-            }
-
-            compareVersions(v1, v2) {
-                const parts1 = v1.split('.').map(Number);
-                const parts2 = v2.split('.').map(Number);
-                
-                for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-                    const part1 = parts1[i] || 0;
-                    const part2 = parts2[i] || 0;
-                    
-                    if (part1 > part2) return 1;
-                    if (part1 < part2) return -1;
-                }
-                return 0;
-            }
-
-            showUpdateNotification(updateInfo) {
-                // Создаем уведомление об обновлении
-                const notification = document.createElement('div');
-                notification.className = 'update-notification';
-                notification.innerHTML = `
-                    <div style="
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-                        color: white;
-                        padding: 20px;
-                        border-radius: var(--border-radius);
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                        z-index: 10000;
-                        max-width: 400px;
-                        animation: slideIn 0.3s ease;
-                        border-left: 4px solid var(--secondary-color);
-                    ">
-                        <h3 style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-sync-alt"></i> Доступно обновление!
-                        </h3>
-                        <p style="margin-bottom: 15px; opacity: 0.9;">
-                            Версия ${updateInfo.version} • ${updateInfo.changelog || 'Обновление системы'}
-                        </p>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button id="updateNowBtn" style="
-                                background: var(--success-color);
-                                color: white;
-                                border: none;
-                                padding: 8px 16px;
-                                border-radius: 4px;
-                                cursor: pointer;
-                                font-weight: 600;
-                                flex: 1;
-                            ">
-                                <i class="fas fa-download"></i> Обновить сейчас
-                            </button>
-                            <button id="updateLaterBtn" style="
-                                background: transparent;
-                                color: white;
-                                border: 1px solid rgba(255,255,255,0.3);
-                                padding: 8px 16px;
-                                border-radius: 4px;
-                                cursor: pointer;
-                                flex: 1;
-                            ">
-                                Напомнить позже
-                            </button>
-                            <button id="ignoreUpdateBtn" style="
-                                background: transparent;
-                                color: rgba(255,255,255,0.7);
-                                border: none;
-                                padding: 8px;
-                                cursor: pointer;
-                                font-size: 12px;
-                            ">
-                                Не напоминать об этой версии
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                document.body.appendChild(notification);
-                
-                // Обработчики кнопок
-                document.getElementById('updateNowBtn').addEventListener('click', () => {
-                    window.open(updateInfo.update_url || UPDATE_CONFIG.versionUrl.replace('version.json', 'index.html'), '_blank');
-                    notification.remove();
-                });
-                
-                document.getElementById('updateLaterBtn').addEventListener('click', () => {
-                    notification.remove();
-                });
-                
-                document.getElementById('ignoreUpdateBtn').addEventListener('click', () => {
-                    localStorage.setItem('ignoredUpdateVersion', updateInfo.version);
-                    notification.remove();
-                });
-            }
-        }
-
         // Основной API сервер
         const MAIN_API_SERVER = 'https://monitor.sedo.keydisk.ru';
         const ASTRAL_API_SERVER = 'https://monitor.sedo.cloud.astral-dev.ru';
@@ -2303,14 +2149,6 @@
             createParticles();
             setupAnimationOptimization();
             
-            // Инициализация автообновления
-            const autoUpdater = new AutoUpdater();
-            
-            // Обновляем отображение версии
-            if (appVersion) {
-                appVersion.textContent = UPDATE_CONFIG.currentVersion;
-            }
-            
             // Настраиваем обработчик для ручной проверки обновлений
             if (manualCheckUpdate) {
                 manualCheckUpdate.addEventListener('click', async function() {
@@ -2318,24 +2156,169 @@
                     this.disabled = true;
                     
                     try {
-                        await autoUpdater.checkForUpdates();
-                        
-                        this.innerHTML = '<i class="fas fa-check"></i> Проверено';
-                        setTimeout(() => {
-                            this.innerHTML = '<i class="fas fa-sync-alt"></i> Проверить обновления';
-                            this.disabled = false;
-                        }, 2000);
-                        
+                        if (typeof electronAPI !== 'undefined') {
+                            const updateInfo = await electronAPI.checkForUpdates();
+                            if (updateInfo) {
+                                showUpdateNotification(updateInfo);
+                            } else {
+                                alert('У вас установлена последняя версия!');
+                            }
+                        } else {
+                            alert('Функция обновлений не доступна в текущем режиме');
+                        }
                     } catch (error) {
-                        this.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Ошибка';
-                        setTimeout(() => {
-                            this.innerHTML = '<i class="fas fa-sync-alt"></i> Проверить обновления';
-                            this.disabled = false;
-                        }, 2000);
+                        console.error('Ошибка при проверке обновлений:', error);
+                        alert('Ошибка при проверке обновлений: ' + error.message);
+                    } finally {
+                        this.innerHTML = '<i class="fas fa-sync-alt"></i> Проверить обновления';
+                        this.disabled = false;
+                    }
+                });
+            }
+            
+            // Инициализация слушателей для автообновления
+            setupAutoUpdateListeners();
+            
+            // Получаем версию приложения
+            if (typeof electronAPI !== 'undefined') {
+                electronAPI.getAppVersion().then(version => {
+                    if (appVersion) {
+                        appVersion.textContent = version;
                     }
                 });
             }
         });
+
+        // Настройка слушателей для автообновления
+        function setupAutoUpdateListeners() {
+            if (typeof electronAPI !== 'undefined') {
+                // Слушаем событие о доступном обновлении от main процесса
+                electronAPI.onUpdateAvailable((event, updateInfo) => {
+                    console.log('Получено обновление через electronAPI:', updateInfo);
+                    showUpdateNotification(updateInfo);
+                });
+
+                // Слушаем событие о завершении обновления
+                electronAPI.onUpdateCompleted(() => {
+                    console.log('Обновление завершено, перезагружаю приложение...');
+                    
+                    // Показываем сообщение и перезагружаем
+                    if (typeof showMessage === 'function') {
+                        showMessage('Обновление завершено', 'Приложение будет перезагружено через 2 секунды');
+                    }
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                });
+            }
+            
+            // Альтернативно, если используется прямой ipcRenderer (без preload)
+            if (typeof ipcRenderer !== 'undefined') {
+                ipcRenderer.on('update-available', (event, updateInfo) => {
+                    console.log('Получено обновление через ipcRenderer:', updateInfo);
+                    showUpdateNotification(updateInfo);
+                });
+
+                ipcRenderer.on('update-completed', () => {
+                    console.log('Обновление завершено');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                });
+            }
+        }
+
+        // Функция показа уведомления об обновлении
+        function showUpdateNotification(updateInfo) {
+            // Создаем уведомление об обновлении
+            const notification = document.createElement('div');
+            notification.className = 'update-notification';
+            notification.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: var(--border-radius);
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    z-index: 10000;
+                    max-width: 400px;
+                    animation: slideIn 0.3s ease;
+                    border-left: 4px solid var(--secondary-color);
+                ">
+                    <h3 style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-sync-alt"></i> Доступно обновление!
+                    </h3>
+                    <p style="margin-bottom: 15px; opacity: 0.9;">
+                        Версия ${updateInfo.version} • ${updateInfo.changelog || 'Обновление системы'}
+                    </p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="updateNowBtn" style="
+                            background: var(--success-color);
+                            color: white;
+                            border: none;
+                            padding: 8px 16px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-weight: 600;
+                            flex: 1;
+                        ">
+                            <i class="fas fa-download"></i> Обновить сейчас
+                        </button>
+                        <button id="updateLaterBtn" style="
+                            background: transparent;
+                            color: white;
+                            border: 1px solid rgba(255,255,255,0.3);
+                            padding: 8px 16px;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            flex: 1;
+                        ">
+                            Напомнить позже
+                        </button>
+                        <button id="ignoreUpdateBtn" style="
+                            background: transparent;
+                            color: rgba(255,255,255,0.7);
+                            border: none;
+                            padding: 8px;
+                            cursor: pointer;
+                            font-size: 12px;
+                        ">
+                            Не напоминать об этой версии
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Обработчики кнопок
+            document.getElementById('updateNowBtn').addEventListener('click', async () => {
+                try {
+                    if (typeof electronAPI !== 'undefined') {
+                        await electronAPI.installUpdate();
+                    } else {
+                        window.open(updateInfo.update_url || 'https://github.com/freddiefrank/sedo_version/blob/main/index.html', '_blank');
+                    }
+                    notification.remove();
+                } catch (error) {
+                    console.error('Ошибка при установке обновления:', error);
+                    alert('Ошибка при установке обновления: ' + error.message);
+                }
+            });
+            
+            document.getElementById('updateLaterBtn').addEventListener('click', () => {
+                notification.remove();
+            });
+            
+            document.getElementById('ignoreUpdateBtn').addEventListener('click', () => {
+                localStorage.setItem('ignoredUpdateVersion', updateInfo.version);
+                notification.remove();
+            });
+        }
 
         // Оптимизация анимаций
         function setupAnimationOptimization() {
