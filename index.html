@@ -1395,7 +1395,7 @@
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-sync-alt"></i> Версия приложения</div>
-                        <div class="info-value" id="appVersion">1.0.8</div>
+                        <div class="info-value" id="appVersion">1.0.9</div>
                     </div>
                     <button id="manualCheckUpdate" class="search-btn" style="width: 100%; margin-top: 10px;">
                         <i class="fas fa-sync-alt"></i> Проверить обновления
@@ -1768,17 +1768,39 @@
         // === КОНФИГУРАЦИЯ ОПТИМИЗАЦИИ ===
         const CACHE_CONFIG = {
             TTL: 5 * 60 * 1000,
-            MAX_ITEMS: 50,
+            MAX_ITEMS: 100,
             ENABLED: true
         };
 
         const REQUEST_CONFIG = {
-            MAX_RETRIES: 2,
+            MAX_RETRIES: 1,
             RETRY_DELAY: 1000,
-            TIMEOUT: 30000,
+            TIMEOUT: 10000,
             DEBOUNCE_DELAY: 500,
-            RATE_LIMIT_DELAY: 1000,
-            MAX_REQUESTS_PER_MINUTE: 30
+            RATE_LIMIT_DELAY: 500,
+            MAX_REQUESTS_PER_MINUTE: 60
+        };
+
+        // === КОНФИГУРАЦИЯ CIRCUIT BREAKER ===
+        const CIRCUIT_BREAKER_CONFIG = {
+            MAX_CONSECUTIVE_ERRORS: 2,
+            OPEN_STATE_TIMEOUT: 30000,
+            HEALTH_CHECK_INTERVAL: 15000
+        };
+
+        let serverHealth = {
+            main: {
+                consecutiveErrors: 0,
+                state: 'CLOSED',
+                lastErrorTime: null,
+                halfOpenRequestSent: false
+            },
+            astral: {
+                consecutiveErrors: 0,
+                state: 'CLOSED',
+                lastErrorTime: null,
+                halfOpenRequestSent: false
+            }
         };
 
         // Тестовые данные для fallback-режима
@@ -2040,6 +2062,87 @@
             }
         };
 
+        // === CIRCUIT BREAKER ФУНКЦИИ ===
+        function getServerFromUrl(url) {
+            if (url.includes(MAIN_API_SERVER)) {
+                return 'main';
+            } else if (url.includes(ASTRAL_API_SERVER)) {
+                return 'astral';
+            } else {
+                return null;
+            }
+        }
+
+        function isServerAvailable(server) {
+            if (!server) return true;
+
+            const health = serverHealth[server];
+            if (!health) return true;
+
+            if (health.state === 'CLOSED') {
+                return true;
+            } else if (health.state === 'OPEN') {
+                if (Date.now() - health.lastErrorTime > CIRCUIT_BREAKER_CONFIG.OPEN_STATE_TIMEOUT) {
+                    health.state = 'HALF_OPEN';
+                    health.halfOpenRequestSent = false;
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (health.state === 'HALF_OPEN') {
+                if (health.halfOpenRequestSent) {
+                    return false;
+                } else {
+                    health.halfOpenRequestSent = true;
+                    return true;
+                }
+            }
+            return true;
+        }
+
+        function updateServerHealthOnSuccess(server) {
+            if (!server) return;
+
+            const health = serverHealth[server];
+            if (health) {
+                health.consecutiveErrors = 0;
+                health.state = 'CLOSED';
+                health.lastErrorTime = null;
+                health.halfOpenRequestSent = false;
+            }
+        }
+
+        function updateServerHealthOnError(server) {
+            if (!server) return;
+
+            const health = serverHealth[server];
+            if (health) {
+                health.consecutiveErrors++;
+                health.lastErrorTime = Date.now();
+
+                if (health.state === 'HALF_OPEN' || health.consecutiveErrors >= CIRCUIT_BREAKER_CONFIG.MAX_CONSECUTIVE_ERRORS) {
+                    health.state = 'OPEN';
+                }
+                health.halfOpenRequestSent = false;
+            }
+        }
+
+        function getFallbackData(requestType) {
+            let fallbackData;
+            
+            if (requestType === 'subscription') {
+                fallbackData = FALLBACK_DATA.subscription;
+            } else if (requestType === 'message') {
+                fallbackData = FALLBACK_DATA.message;
+            } else if (requestType === 'documents') {
+                fallbackData = FALLBACK_DATA.documents;
+            } else {
+                fallbackData = { status: 'error', message: 'Данные временно недоступны' };
+            }
+            
+            return { data: fallbackData, source: 'fallback', isFallback: true };
+        }
+
         // Класс для управления кэшем
         class RequestCache {
             constructor() {
@@ -2159,7 +2262,7 @@
         async function checkServerAvailability(url) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
                 
                 const response = await fetch(url, {
                     method: 'HEAD',
@@ -2170,7 +2273,6 @@
                 clearTimeout(timeoutId);
                 return response.ok;
             } catch (error) {
-                console.log('Сервер недоступен:', error.message);
                 return false;
             }
         }
@@ -2180,13 +2282,17 @@
             if (cacheKey) {
                 const cached = requestCache.get(cacheKey);
                 if (cached) {
-                    console.log('Используем кэшированные данные для ключа:', cacheKey);
                     return { data: cached, source: 'cache', isFallback: false };
                 }
             }
 
+            const server = getServerFromUrl(url);
+
+            if (!isServerAvailable(server)) {
+                return getFallbackData(requestType);
+            }
+
             if (activeRequests.has(cacheKey)) {
-                console.log('Ждем завершения активного запроса:', cacheKey);
                 const result = await activeRequests.get(cacheKey);
                 return result;
             }
@@ -2199,12 +2305,11 @@
                         
                         options.signal = controller.signal;
                         
-                        console.log(`Попытка ${i + 1} запроса к: ${url}`);
                         const response = await fetch(url, options);
                         clearTimeout(timeoutId);
                         
                         if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            throw new Error(`HTTP ${response.status}`);
                         }
                         
                         let data = await response.json();
@@ -2212,35 +2317,18 @@
                         if (cacheKey) {
                             requestCache.set(cacheKey, data);
                         }
+
+                        updateServerHealthOnSuccess(server);
                         
                         return { data: data, source: 'server', isFallback: false };
                         
                     } catch (error) {
-                        console.error(`Ошибка при попытке ${i + 1}:`, error);
-                        
                         if (i === retryCount) {
-                            // Все попытки исчерпаны
-                            if (USE_FALLBACK_MODE) {
-                                console.log('Используем fallback-данные');
-                                let fallbackData;
-                                
-                                if (requestType === 'subscription') {
-                                    fallbackData = FALLBACK_DATA.subscription;
-                                } else if (requestType === 'message') {
-                                    fallbackData = FALLBACK_DATA.message;
-                                } else if (requestType === 'documents') {
-                                    fallbackData = FALLBACK_DATA.documents;
-                                } else {
-                                    fallbackData = { status: 'error', message: 'Данные временно недоступны' };
-                                }
-                                
-                                return { data: fallbackData, source: 'fallback', isFallback: true };
-                            }
-                            
-                            throw error;
+                            updateServerHealthOnError(server);
+                            return getFallbackData(requestType);
                         }
                         
-                        await new Promise(resolve => setTimeout(resolve, REQUEST_CONFIG.RETRY_DELAY * (i + 1)));
+                        await new Promise(resolve => setTimeout(resolve, REQUEST_CONFIG.RETRY_DELAY));
                     }
                 }
             })();
@@ -2284,11 +2372,9 @@
             return fetchWithRetryAndCache(url, {
                 headers: {
                     'Accept': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Cache-Control': 'no-cache'
+                    'Cache-Control': 'max-age=300'
                 },
-                mode: 'cors',
-                cache: 'no-store'
+                mode: 'cors'
             }, cacheKey, 'subscription');
         }
 
@@ -2333,11 +2419,9 @@
             return fetchWithRetryAndCache(url, {
                 headers: {
                     'Accept': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Cache-Control': 'no-cache'
+                    'Cache-Control': 'max-age=300'
                 },
-                mode: 'cors',
-                cache: 'no-store'
+                mode: 'cors'
             }, cacheKey, requestType);
         }
 
@@ -2451,7 +2535,32 @@
             
             // Проверка доступности сервера при загрузке
             checkInitialConnection();
+            
+            // Запускаем периодическую проверку здоровья серверов
+            startHealthChecks();
         });
+
+        // Периодическая проверка здоровья серверов
+        function startHealthChecks() {
+            setInterval(async () => {
+                // Проверяем только серверы в состоянии OPEN
+                if (serverHealth.main.state === 'OPEN') {
+                    const isAvailable = await checkServerAvailability(`${MAIN_API_SERVER}/health`);
+                    if (isAvailable) {
+                        serverHealth.main.state = 'CLOSED';
+                        serverHealth.main.consecutiveErrors = 0;
+                    }
+                }
+                
+                if (serverHealth.astral.state === 'OPEN') {
+                    const isAvailable = await checkServerAvailability(`${ASTRAL_API_SERVER}/health`);
+                    if (isAvailable) {
+                        serverHealth.astral.state = 'CLOSED';
+                        serverHealth.astral.consecutiveErrors = 0;
+                    }
+                }
+            }, CIRCUIT_BREAKER_CONFIG.HEALTH_CHECK_INTERVAL);
+        }
 
         // Проверка начального соединения
         async function checkInitialConnection() {
@@ -3052,12 +3161,12 @@
             const oldParticles = particleContainer.querySelectorAll('.particle');
             oldParticles.forEach(particle => particle.remove());
             
-            const particleCount = 30;
+            const particleCount = 20;
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.classList.add('particle');
                 
-                const size = Math.random() * 20 + 5;
+                const size = Math.random() * 15 + 5;
                 particle.style.width = `${size}px`;
                 particle.style.height = `${size}px`;
                 
@@ -3248,8 +3357,6 @@
                 }
                 
             } catch (error) {
-                console.error('Ошибка при проверке подписки:', error);
-                
                 let errorMessage = error.message;
                 if (error.message.includes('timeout') || error.message.includes('time out')) {
                     errorMessage = 'Превышено время ожидания ответа от сервера. Попробуйте позже.';
@@ -3324,8 +3431,6 @@
                 }
                 
             } catch (error) {
-                console.error('Ошибка при загрузке данных:', error);
-                
                 let errorMessage = error.message;
                 if (error.message.includes('timeout') || error.message.includes('time out')) {
                     errorMessage = 'Превышено время ожидания ответа от сервера. Попробуйте позже.';
