@@ -2301,7 +2301,7 @@
                     if (typeof electronAPI !== 'undefined') {
                         await electronAPI.installUpdate();
                     } else {
-                        window.open(updateInfo.update_url || 'https://github.com/freddiefrank/sedo_version/blob/main/index.html', '_blank');
+                        window.open(updateInfo.update_url || 'https://raw.githubusercontent.com/freddiefrank/sedo_version/refs/heads/main/index.html?token=GHSAT0AAAAAADU5ORZAHCY27BQ6WDXA3RJQ2MFYPAQ', '_blank');
                     }
                     notification.remove();
                 } catch (error) {
