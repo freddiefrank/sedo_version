@@ -1,0 +1,3731 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мониторинг сообщений СЭДО</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS переменные для тем */
+        :root {
+            --primary-color: #2a5298;
+            --primary-dark: #1e3c72;
+            --primary-light: #4a90e2;
+            --secondary-color: #ffb300;
+            --secondary-dark: #ff8f00;
+            --background-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-light: #666666;
+            --border-color: #d1d9e6;
+            --success-color: #1a8754;
+            --error-color: #d32f2f;
+            --warning-color: #ff9800;
+            --achievement-color: #9c27b0;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --border-radius: 8px;
+            --tab-active: #4a90e2;
+            --tab-inactive: #e0e0e0;
+        }
+
+        /* Темная тема */
+        .theme-dark {
+            --primary-color: #4a90e2;
+            --primary-dark: #2a5298;
+            --primary-light: #6eb0ff;
+            --secondary-color: #ffb300;
+            --secondary-dark: #ff8f00;
+            --background-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --text-light: #aaaaaa;
+            --border-color: #333333;
+            --achievement-color: #ba68c8;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --tab-active: #6eb0ff;
+            --tab-inactive: #333333;
+        }
+
+        /* Синяя тема */
+        .theme-blue {
+            --primary-color: #1565c0;
+            --primary-dark: #0d47a1;
+            --primary-light: #5e92f3;
+            --secondary-color: #00bcd4;
+            --secondary-dark: #00838f;
+            --background-color: #e3f2fd;
+            --card-bg: #ffffff;
+            --text-color: #0d47a1;
+            --text-light: #546e7a;
+            --border-color: #bbdefb;
+            --achievement-color: #7b1fa2;
+            --tab-active: #5e92f3;
+            --tab-inactive: #bbdefb;
+        }
+
+        /* Зеленая тема */
+        .theme-green {
+            --primary-color: #1a8754;
+            --primary-dark: #0d5c3a;
+            --primary-light: #4caf50;
+            --secondary-color: #8bc34a;
+            --secondary-dark: #689f38;
+            --background-color: #e8f5e9;
+            --card-bg: #ffffff;
+            --text-color: #1b5e20;
+            --text-light: #4caf50;
+            --border-color: #c8e6c9;
+            --achievement-color: #7b1fa2;
+            --tab-active: #4caf50;
+            --tab-inactive: #c8e6c9;
+        }
+
+        /* Оранжевая тема */
+        .theme-orange {
+            --primary-color: #f57c00;
+            --primary-dark: #e65100;
+            --primary-light: #ffb74d;
+            --secondary-color: #ff9800;
+            --secondary-dark: #f57c00;
+            --background-color: #fff3e0;
+            --card-bg: #ffffff;
+            --text-color: #bf360c;
+            --text-light: #ff9800;
+            --border-color: #ffe0b2;
+            --achievement-color: #7b1fa2;
+            --tab-active: #ffb74d;
+            --tab-inactive: #ffe0b2;
+        }
+
+        /* Розовая тема */
+        .theme-pink {
+            --primary-color: #e91e63;
+            --primary-dark: #ad1457;
+            --primary-light: #f48fb1;
+            --secondary-color: #ec407a;
+            --secondary-dark: #d81b60;
+            --background-color: #fce4ec;
+            --card-bg: #ffffff;
+            --text-color: #880e4f;
+            --text-light: #c2185b;
+            --border-color: #f8bbd9;
+            --achievement-color: #9c27b0;
+            --tab-active: #f48fb1;
+            --tab-inactive: #f8bbd9;
+        }
+
+        /* Анимированные фоны за достижения - ПЕРЕДЕЛАНЫ */
+.bg-achievement-gold {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(-45deg, 
+        #ffd700 0%, 
+        #ffed4e 25%, 
+        #fff8a6 50%, 
+        #ffed4e 75%, 
+        #ffd700 100%);
+    background-size: 400% 400%;
+    animation: gradientGold 8s ease infinite;
+    opacity: 0.15;
+    display: none;
+}
+
+.bg-achievement-silver {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(-45deg, 
+        #c0c0c0 0%, 
+        #e8e8e8 25%, 
+        #f0f0f0 50%, 
+        #e8e8e8 75%, 
+        #c0c0c0 100%);
+    background-size: 400% 400%;
+    animation: gradientSilver 10s ease infinite;
+    opacity: 0.12;
+    display: none;
+}
+
+.bg-achievement-bronze {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(-45deg, 
+        #cd7f32 0%, 
+        #e6a15c 25%, 
+        #f0c690 50%, 
+        #e6a15c 75%, 
+        #cd7f32 100%);
+    background-size: 400% 400%;
+    animation: gradientBronze 12s ease infinite;
+    opacity: 0.12;
+    display: none;
+}
+
+.bg-achievement-rainbow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(-45deg, 
+        #ff0000 0%, 
+        #ff9900 17%, 
+        #ffff00 33%, 
+        #00ff00 50%, 
+        #00ffff 67%, 
+        #0000ff 83%, 
+        #9900ff 100%);
+    background-size: 400% 400%;
+    animation: gradientRainbow 20s ease infinite;
+    opacity: 0.08;
+    display: none;
+}
+
+.bg-achievement-particle {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    display: none;
+}
+
+.particle {
+    position: absolute;
+    background: var(--primary-light);
+    border-radius: 50%;
+    animation: floatParticle 20s infinite linear;
+    opacity: 0.1;
+    filter: blur(1px);
+}
+
+.particle:nth-child(3n) {
+    background: var(--secondary-color);
+    animation-duration: 25s;
+}
+
+.particle:nth-child(5n) {
+    background: var(--achievement-color);
+    animation-duration: 15s;
+    opacity: 0.15;
+}
+
+@keyframes gradientGold {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes gradientSilver {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes gradientBronze {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes gradientRainbow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes floatParticle {
+    0% {
+        transform: translateY(100vh) translateX(-50px) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.1;
+    }
+    90% {
+        opacity: 0.1;
+    }
+    100% {
+        transform: translateY(-100px) translateX(calc(100vw + 50px)) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.achievement-background-active {
+    display: block !important;
+}
+
+/* Улучшенные превью фонов */
+.background-preview {
+    width: 100%;
+    height: 40px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    position: relative;
+    background-size: 400% 400% !important;
+    animation: previewAnimation 4s ease infinite;
+}
+
+@keyframes previewAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.background-preview.bg-achievement-gold {
+    background: linear-gradient(-45deg, 
+        #ffd700 0%, 
+        #ffed4e 25%, 
+        #fff8a6 50%, 
+        #ffed4e 75%, 
+        #ffd700 100%);
+}
+
+.background-preview.bg-achievement-silver {
+    background: linear-gradient(-45deg, 
+        #c0c0c0 0%, 
+        #e8e8e8 25%, 
+        #f0f0f0 50%, 
+        #e8e8e8 75%, 
+        #c0c0c0 100%);
+}
+
+.background-preview.bg-achievement-bronze {
+    background: linear-gradient(-45deg, 
+        #cd7f32 0%, 
+        #e6a15c 25%, 
+        #f0c690 50%, 
+        #e6a15c 75%, 
+        #cd7f32 100%);
+}
+
+.background-preview.bg-achievement-rainbow {
+    background: linear-gradient(-45deg, 
+        #ff0000 0%, 
+        #ff9900 17%, 
+        #ffff00 33%, 
+        #00ff00 50%, 
+        #00ffff 67%, 
+        #0000ff 83%, 
+        #9900ff 100%);
+}
+
+.background-preview.bg-achievement-particle {
+    background: var(--background-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.background-preview.bg-achievement-particle::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    animation: previewParticle 3s linear infinite;
+    opacity: 0.6;
+}
+
+.background-preview.bg-achievement-particle::after {
+    content: '';
+    position: absolute;
+    top: 25px;
+    right: 15px;
+    width: 6px;
+    height: 6px;
+    background: var(--secondary-color);
+    border-radius: 50%;
+    animation: previewParticle 4s linear infinite;
+    animation-delay: 1s;
+    opacity: 0.6;
+}
+
+@keyframes previewParticle {
+    0% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(10px) translateY(-5px); }
+    50% { transform: translateX(20px) translateY(0); }
+    75% { transform: translateX(10px) translateY(5px); }
+    100% { transform: translateX(0) translateY(0); }
+}
+
+.background-name {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    font-size: 11px;
+    z-index: 2;
+    background: rgba(0,0,0,0.3);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Стили для уведомления об обновлении */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 179, 0, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 179, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 179, 0, 0); }
+}
+
+.update-notification {
+    animation: slideIn 0.3s ease;
+}
+
+.update-available-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--secondary-color);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            padding: 15px;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Панель настроек - компактная */
+        .settings-panel {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .settings-title {
+            font-size: 16px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .settings-content {
+            display: none;
+        }
+        
+        .settings-content.active {
+            display: block;
+        }
+        
+        /* Выбор темы - компактный */
+        .theme-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .theme-option {
+            padding: 12px 8px;
+            border-radius: 6px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        .theme-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .theme-option.active {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+        
+        .theme-preview {
+            width: 100%;
+            height: 20px;
+            border-radius: 3px;
+            margin-bottom: 8px;
+        }
+        
+        /* Заголовок */
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+            background-color: var(--tab-inactive);
+            border: none;
+            outline: none;
+        }
+        
+        .tab:hover {
+            background-color: var(--primary-light);
+            color: white;
+        }
+        
+        .tab.active {
+            background-color: var(--tab-active);
+            color: white;
+        }
+        
+        /* Контент вкладок */
+        .tab-content {
+            display: none;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Панель поиска */
+        .search-panel {
+            background-color: var(--background-color);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+        
+        .search-title {
+            font-size: 18px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .search-title i {
+            color: var(--primary-light);
+        }
+        
+        /* Выбор типа поиска */
+        .search-type-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .search-type-btn {
+            padding: 10px 12px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        
+        .search-type-btn:hover {
+            border-color: var(--primary-light);
+        }
+        
+        .search-type-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        /* Подразделы - сворачиваемые */
+        .subsection {
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .subsection-header {
+            background-color: var(--card-bg);
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .subsection-header:hover {
+            background-color: var(--background-color);
+        }
+        
+        .subsection-header.active {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .subsection-title {
+            font-size: 16px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+        
+        .subsection-toggle {
+            transition: transform 0.3s ease;
+            color: var(--text-light);
+        }
+        
+        .subsection-header.active .subsection-toggle {
+            transform: rotate(180deg);
+        }
+        
+        .subsection-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background-color: var(--card-bg);
+        }
+        
+        .subsection-content.active {
+            max-height: 1000px;
+            padding: 15px;
+        }
+        
+        .date-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .date-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .date-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .date-label {
+            font-size: 13px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .search-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .search-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .search-btn:disabled {
+            background-color: var(--text-light);
+            cursor: not-allowed;
+        }
+        
+        .search-example {
+            font-size: 13px;
+            color: var(--text-light);
+            background-color: var(--background-color);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid var(--primary-light);
+            margin-top: 12px;
+        }
+        
+        .search-example span {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        /* Индикатор загрузки */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: var(--primary-color);
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Ошибки */
+        .error-panel {
+            display: none;
+            background-color: rgba(211, 47, 47, 0.1);
+            color: var(--error-color);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--error-color);
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        
+        .error-panel.active {
+            display: block;
+        }
+        
+        /* Сообщение не найдено */
+        .not-found-panel {
+            display: none;
+            background-color: rgba(255, 152, 0, 0.1);
+            color: var(--warning-color);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--warning-color);
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        
+        .not-found-panel.active {
+            display: block;
+        }
+        
+        /* Основной контент */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-title i {
+            color: var(--primary-light);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+        
+        .info-item {
+            padding: 8px 0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .info-label i {
+            color: var(--primary-light);
+            font-size: 12px;
+        }
+        
+        .info-value {
+            font-size: 14px;
+            color: var(--text-color);
+            word-break: break-word;
+            padding: 6px 0;
+        }
+        
+        .highlight {
+            background-color: rgba(255, 179, 0, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border-left: 3px solid var(--secondary-color);
+        }
+        
+        /* Сообщения */
+        .messages-container {
+            grid-column: 1 / -1;
+        }
+        
+        .messages-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .message-card {
+            background-color: var(--card-bg);
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.2s;
+            cursor: pointer;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .message-card:hover {
+            transform: translateX(3px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .message-card.expanded {
+            border-left-color: var(--primary-light);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .message-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .message-type {
+            background-color: rgba(74, 144, 226, 0.1);
+            color: var(--primary-color);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .message-date {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+        
+        .message-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            display: none;
+        }
+        
+        .message-card.expanded .message-details {
+            display: grid;
+        }
+        
+        /* Документы */
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .document-card {
+            background-color: var(--card-bg);
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+        }
+        
+        .document-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .document-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+        
+        .document-id {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-bottom: 12px;
+            font-family: monospace;
+        }
+        
+        .document-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        /* Статус */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background-color: rgba(26, 135, 84, 0.1);
+            color: var(--success-color);
+        }
+        
+        .status-error {
+            background-color: rgba(211, 47, 47, 0.1);
+            color: var(--error-color);
+        }
+        
+        .status-warning {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: var(--warning-color);
+        }
+        
+        /* Подписка - результаты */
+        .subscription-result {
+            display: none;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-top: 15px;
+        }
+        
+        .subscription-result.active {
+            display: block;
+        }
+        
+        .subscription-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .status-icon {
+            font-size: 32px;
+        }
+        
+        .status-icon.active {
+            color: var(--success-color);
+        }
+        
+        .status-icon.inactive {
+            color: var(--error-color);
+        }
+        
+        .status-text {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .status-text.active {
+            color: var(--success-color);
+        }
+        
+        .status-text.inactive {
+            color: var(--error-color);
+        }
+        
+        .subscription-details {
+            background-color: var(--background-color);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 13px;
+        }
+        
+        .detail-value {
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 13px;
+        }
+        
+        /* Достижения */
+        .achievement-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--achievement-color) 0%, var(--primary-color) 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+        }
+        
+        .achievement-notification.active {
+            display: block;
+        }
+        
+        .achievement-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
+        .achievement-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .achievement-desc {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .achievement-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .achievement-card.locked {
+            opacity: 0.7;
+        }
+        
+        .achievement-badge {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--achievement-color) 0%, var(--primary-color) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .achievement-badge.locked {
+            background: var(--text-light);
+        }
+        
+        .achievement-content {
+            flex: 1;
+        }
+        
+        .achievement-name {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 5px;
+        }
+        
+        .achievement-description {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+        
+        .achievement-progress {
+            height: 6px;
+            background-color: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .achievement-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--achievement-color) 0%, var(--primary-color) 100%);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .achievement-progress-text {
+            font-size: 12px;
+            color: var(--text-light);
+            text-align: right;
+            margin-top: 3px;
+        }
+        
+        /* Подвал */
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-light);
+            font-size: 12px;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .theme-selector, .info-grid, .message-details, .search-type-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-type-selector {
+                flex-direction: column;
+            }
+            
+            .message-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .message-type {
+                margin-top: 8px;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .search-btn {
+                width: 100%;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                padding: 12px;
+            }
+            
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .achievement-notification {
+                left: 10px;
+                right: 10px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body class="theme-default">
+    <!-- Анимированные фоны за достижения -->
+    <div class="bg-achievement-gold" id="bgGold"></div>
+    <div class="bg-achievement-silver" id="bgSilver"></div>
+    <div class="bg-achievement-bronze" id="bgBronze"></div>
+    <div class="bg-achievement-rainbow" id="bgRainbow"></div>
+    <div class="bg-achievement-particle" id="bgParticle"></div>
+    
+    <div class="container">
+        <!-- Панель настроек -->
+        <div class="settings-panel">
+            <div class="settings-header" id="settingsToggle">
+                <h2 class="settings-title"><i class="fas fa-sliders-h"></i> Настройки интерфейса</h2>
+                <span id="settingsIcon"><i class="fas fa-chevron-down"></i></span>
+            </div>
+            
+            <div class="settings-content" id="settingsContent">
+                <!-- Выбор темы -->
+                <div class="theme-selector">
+                    <div class="theme-option active" data-theme="default">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 50%, #2a5298 100%);"></div>
+                        <div>Светлая</div>
+                    </div>
+                    <div class="theme-option" data-theme="dark">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #121212 0%, #1e1e1e 50%, #4a90e2 100%);"></div>
+                        <div>Темная</div>
+                    </div>
+                    <div class="theme-option" data-theme="blue">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 50%, #1565c0 100%);"></div>
+                        <div>Синяя</div>
+                    </div>
+                    <div class="theme-option" data-theme="green">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #e8f5e9 0%, #ffffff 50%, #1a8754 100%);"></div>
+                        <div>Зеленая</div>
+                    </div>
+                    <div class="theme-option" data-theme="orange">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #fff3e0 0%, #ffffff 50%, #f57c00 100%);"></div>
+                        <div>Оранжевая</div>
+                    </div>
+                    <div class="theme-option" data-theme="pink">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #fce4ec 0%, #ffffff 50%, #e91e63 100%);"></div>
+                        <div>Розовая</div>
+                    </div>
+                </div>
+                
+                <!-- Выбор анимированного фона -->
+                <div id="backgroundSelectorContainer" style="display: none;">
+                    <h3 class="settings-title"><i class="fas fa-image"></i> Анимированные фоны за достижения</h3>
+                    <div class="theme-selector" id="backgroundSelector">
+                        <!-- Фоны будут добавляться динамически -->
+                    </div>
+                </div>
+                
+                <!-- Статистика -->
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-trophy"></i> Получено достижений</div>
+                        <div class="info-value" id="achievementsCount">0/4</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-search"></i> Всего проверок</div>
+                        <div class="info-value" id="totalChecks">0</div>
+                    </div>
+                </div>
+                
+                <!-- Кнопка проверки обновлений -->
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-sync-alt"></i> Версия приложения</div>
+                        <div class="info-value" id="appVersion">1.0.0</div>
+                    </div>
+                    <button id="manualCheckUpdate" class="search-btn" style="width: 100%; margin-top: 10px;">
+                        <i class="fas fa-sync-alt"></i> Проверить обновления
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Уведомление о достижении -->
+        <div class="achievement-notification" id="achievementNotification">
+            <div style="display: flex; align-items: center;">
+                <div class="achievement-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div>
+                    <div class="achievement-title" id="achievementNotificationTitle">Новое достижение!</div>
+                    <div class="achievement-desc" id="achievementNotificationDesc">Описание достижения</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Заголовок -->
+        <div class="header">
+            <h1><i class="fas fa-search"></i> Мониторинг сообщений СЭДО</h1>
+            <p class="subtitle">Проверка подписки на оператора и поиск информации о сообщениях</p>
+        </div>
+        
+        <!-- Вкладки -->
+        <div class="tabs">
+            <button class="tab active" data-tab="subscription">
+                <i class="fas fa-user-check"></i> Проверка подписки
+            </button>
+            <button class="tab" data-tab="messages">
+                <i class="fas fa-envelope"></i> Поиск сообщений
+            </button>
+            <button class="tab" data-tab="achievements">
+                <i class="fas fa-trophy"></i> Достижения
+            </button>
+        </div>
+        
+        <!-- Вкладка 1: Проверка подписки -->
+        <div id="subscription-tab" class="tab-content active">
+            <div class="search-panel">
+                <h2 class="search-title"><i class="fas fa-user-check"></i> Проверка подписки на оператора</h2>
+                
+                <!-- Выбор типа проверки -->
+                <div class="search-type-selector" id="subscriptionTypeSelector">
+                    <button class="search-type-btn active" data-type="inn">
+                        <i class="fas fa-id-card"></i> По ИНН
+                    </button>
+                    <button class="search-type-btn" data-type="regnum">
+                        <i class="fas fa-user"></i> По рег.номеру СФР
+                    </button>
+                </div>
+                
+                <!-- Ввод данных -->
+                <div class="search-box">
+                    <input type="text" id="subscriptionInput" class="search-input" 
+                           placeholder="Введите ИНН клиента (10 или 12 цифр)">
+                    <button id="subscriptionButton" class="search-btn">
+                        <i class="fas fa-search"></i> Проверить
+                    </button>
+                </div>
+                
+                <!-- Примеры -->
+                <div class="search-example">
+                    <p><strong>Примеры:</strong> <span>7712345678</span> (ИНН юр.лица) • <span>123456789012</span> (ИНН физ.лица) • <span>2322720573</span> (рег.номер СФР)</p>
+                </div>
+            </div>
+            
+            <!-- Индикатор загрузки -->
+            <div id="subscriptionLoadingIndicator" class="loading">
+                <div class="spinner"></div>
+                <p>Проверяем подписку на оператора...</p>
+            </div>
+            
+            <!-- Панель ошибок -->
+            <div id="subscriptionErrorPanel" class="error-panel">
+                <h3><i class="fas fa-exclamation-triangle"></i> Ошибка проверки подписки</h3>
+                <p id="subscriptionErrorMessage"></p>
+            </div>
+            
+            <!-- Результат проверки подписки -->
+            <div id="subscriptionResult" class="subscription-result">
+                <!-- Результаты будут загружены через JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Вкладка 2: Поиск сообщений -->
+        <div id="messages-tab" class="tab-content">
+            <div class="search-panel">
+                <h2 class="search-title"><i class="fas fa-envelope"></i> Поиск сообщений СЭДО</h2>
+                
+                <!-- Подраздел 1: Поиск по ID сообщения -->
+                <div class="subsection" id="subsectionMessageId">
+                    <div class="subsection-header active">
+                        <h3 class="subsection-title"><i class="fas fa-envelope"></i> Поиск по ID сообщения</h3>
+                        <span class="subsection-toggle"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="subsection-content active">
+                        <div class="search-box">
+                            <input type="text" id="messageIdInput" class="search-input" 
+                                   placeholder="Введите ID сообщения (например: f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3)">
+                            <button id="messageIdButton" class="search-btn">
+                                <i class="fas fa-search"></i> Найти сообщение
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Подраздел 2: Поиск по клиенту -->
+                <div class="subsection" id="subsectionClient">
+                    <div class="subsection-header">
+                        <h3 class="subsection-title"><i class="fas fa-user"></i> Поиск по клиенту</h3>
+                        <span class="subsection-toggle"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="subsection-content">
+                        <!-- Выбор типа поиска клиента -->
+                        <div class="search-type-selector" id="clientSearchTypeSelector">
+                            <button class="search-type-btn active" data-type="clientRegNum">
+                                <i class="fas fa-user"></i> По рег.номеру СФР
+                            </button>
+                            <button class="search-type-btn" data-type="clientGuid">
+                                <i class="fas fa-key"></i> По GUID УЗ
+                            </button>
+                            <button class="search-type-btn" data-type="clientInn">
+                                <i class="fas fa-id-card"></i> По ИНН клиента
+                            </button>
+                        </div>
+                        
+                        <div class="date-inputs">
+                            <div class="date-input-group">
+                                <label class="date-label"><i class="far fa-calendar-alt"></i> Дата начала</label>
+                                <input type="date" id="clientStartDate" class="search-input" value="">
+                            </div>
+                            <div class="date-input-group">
+                                <label class="date-label"><i class="far fa-calendar-alt"></i> Дата окончания</label>
+                                <input type="date" id="clientEndDate" class="search-input" value="">
+                            </div>
+                        </div>
+                        
+                        <div class="search-box">
+                            <input type="text" id="clientSearchInput" class="search-input" 
+                                   placeholder="Введите рег.номер клиента СФР (например: 123-456-789)">
+                            <button id="clientSearchButton" class="search-btn">
+                                <i class="fas fa-search"></i> Найти документы клиента
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Подраздел 3: Поиск по налогоплательщику -->
+                <div class="subsection" id="subsectionInsurant">
+                    <div class="subsection-header">
+                        <h3 class="subsection-title"><i class="fas fa-building"></i> Поиск по налогоплательщику (1С УП)</h3>
+                        <span class="subsection-toggle"><i class="fas fa-chevron-down"></i></span>
+                    </div>
+                    <div class="subsection-content">
+                        <!-- Выбор типа поиска налогоплательщика -->
+                        <div class="search-type-selector" id="insurantSearchTypeSelector">
+                            <button class="search-type-btn active" data-type="insurantRegNum">
+                                <i class="fas fa-building"></i> По рег.номеру ФСС
+                            </button>
+                            <button class="search-type-btn" data-type="insurantInn">
+                                <i class="fas fa-landmark"></i> По ИНН НП
+                            </button>
+                        </div>
+                        
+                        <div class="date-inputs">
+                            <div class="date-input-group">
+                                <label class="date-label"><i class="far fa-calendar-alt"></i> Дата начала</label>
+                                <input type="date" id="insurantStartDate" class="search-input" value="">
+                            </div>
+                            <div class="date-input-group">
+                                <label class="date-label"><i class="far fa-calendar-alt"></i> Дата окончания</label>
+                                <input type="date" id="insurantEndDate" class="search-input" value="">
+                            </div>
+                        </div>
+                        
+                        <div class="search-box">
+                            <input type="text" id="insurantSearchInput" class="search-input" 
+                                   placeholder="Введите рег.номер налогоплательщика в ФСС">
+                            <button id="insurantSearchButton" class="search-btn">
+                                <i class="fas fa-search"></i> Найти документы НП
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Индикатор загрузки -->
+            <div id="messagesLoadingIndicator" class="loading">
+                <div class="spinner"></div>
+                <p>Подключаемся к серверу СЭДО...</p>
+            </div>
+            
+            <!-- Панель ошибок -->
+            <div id="messagesErrorPanel" class="error-panel">
+                <h3><i class="fas fa-exclamation-triangle"></i> Ошибка загрузки данных</h3>
+                <p id="messagesErrorMessage"></p>
+            </div>
+            
+            <!-- Панель "Сообщение не найдено" -->
+            <div id="messagesNotFoundPanel" class="not-found-panel">
+                <h3><i class="fas fa-search-minus"></i> Сообщение не найдено</h3>
+                <p id="messagesNotFoundMessage"></p>
+            </div>
+            
+            <!-- Контент будет загружаться сюда -->
+            <div id="messagesContentContainer">
+                <!-- Здесь будет отображаться загруженный контент -->
+            </div>
+        </div>
+        
+        <!-- Вкладка 3: Достижения -->
+        <div id="achievements-tab" class="tab-content">
+            <div class="search-panel">
+                <h2 class="search-title"><i class="fas fa-trophy"></i> Достижения системы</h2>
+                
+                <div class="info-grid" style="margin-bottom: 20px;">
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-trophy"></i> Всего достижений</div>
+                        <div class="info-value">4</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-star"></i> Ваш прогресс</div>
+                        <div class="info-value" id="achievementsProgress">0%</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label"><i class="fas fa-desktop"></i> Хранилище</div>
+                        <div class="info-value">Только на этом устройстве</div>
+                    </div>
+                </div>
+                
+                <!-- Список достижений -->
+                <div id="achievementsList">
+                    <!-- Достижения будут загружены через JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Подвал -->
+        <div class="footer">
+            <p>Система мониторинга сообщений СЭДО | Тема: <span id="currentThemeName">Светлая</span></p>
+        </div>
+    </div>
+
+    <script>
+        // === КОНФИГУРАЦИЯ АВТООБНОВЛЕНИЯ ===
+        const UPDATE_CONFIG = {
+            // URL для проверки версии (замените на ваш реальный URL)
+            versionUrl: 'https://raw.githubusercontent.com/username/sedo-monitor/main/version.json',
+            // Текущая версия приложения (менять при каждом обновлении!)
+            currentVersion: '1.0.0',
+            // Интервал проверки обновлений (24 часа)
+            checkInterval: 24 * 60 * 60 * 1000,
+            // Принудительная проверка при запуске
+            checkOnStartup: true
+        };
+
+        // === СИСТЕМА АВТООБНОВЛЕНИЯ ===
+        class AutoUpdater {
+            constructor() {
+                this.lastCheck = localStorage.getItem('lastUpdateCheck');
+                this.ignoredVersion = localStorage.getItem('ignoredUpdateVersion');
+                this.setupAutoUpdate();
+            }
+
+            async setupAutoUpdate() {
+                // Проверяем обновления при старте
+                if (UPDATE_CONFIG.checkOnStartup) {
+                    await this.checkForUpdates();
+                }
+
+                // Проверяем по расписанию
+                setInterval(() => this.checkForUpdates(), UPDATE_CONFIG.checkInterval);
+            }
+
+            async checkForUpdates() {
+                try {
+                    console.log('Проверяем наличие обновлений...');
+                    
+                    const response = await fetch(UPDATE_CONFIG.versionUrl, {
+                        cache: 'no-cache',
+                        headers: { 'Cache-Control': 'no-cache' }
+                    });
+                    
+                    if (!response.ok) throw new Error('Не удалось проверить обновления');
+                    
+                    const updateInfo = await response.json();
+                    
+                    // Если версия на сервере новее
+                    if (this.compareVersions(updateInfo.version, UPDATE_CONFIG.currentVersion) > 0) {
+                        // Если пользователь не игнорировал это обновление
+                        if (this.ignoredVersion !== updateInfo.version) {
+                            this.showUpdateNotification(updateInfo);
+                        }
+                    }
+                    
+                    localStorage.setItem('lastUpdateCheck', Date.now().toString());
+                    
+                } catch (error) {
+                    console.warn('Ошибка проверки обновлений:', error);
+                }
+            }
+
+            compareVersions(v1, v2) {
+                const parts1 = v1.split('.').map(Number);
+                const parts2 = v2.split('.').map(Number);
+                
+                for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+                    const part1 = parts1[i] || 0;
+                    const part2 = parts2[i] || 0;
+                    
+                    if (part1 > part2) return 1;
+                    if (part1 < part2) return -1;
+                }
+                return 0;
+            }
+
+            showUpdateNotification(updateInfo) {
+                // Создаем уведомление об обновлении
+                const notification = document.createElement('div');
+                notification.className = 'update-notification';
+                notification.innerHTML = `
+                    <div style="
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+                        color: white;
+                        padding: 20px;
+                        border-radius: var(--border-radius);
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                        z-index: 10000;
+                        max-width: 400px;
+                        animation: slideIn 0.3s ease;
+                        border-left: 4px solid var(--secondary-color);
+                    ">
+                        <h3 style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-sync-alt"></i> Доступно обновление!
+                        </h3>
+                        <p style="margin-bottom: 15px; opacity: 0.9;">
+                            Версия ${updateInfo.version} • ${updateInfo.changelog || 'Обновление системы'}
+                        </p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="updateNowBtn" style="
+                                background: var(--success-color);
+                                color: white;
+                                border: none;
+                                padding: 8px 16px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-weight: 600;
+                                flex: 1;
+                            ">
+                                <i class="fas fa-download"></i> Обновить сейчас
+                            </button>
+                            <button id="updateLaterBtn" style="
+                                background: transparent;
+                                color: white;
+                                border: 1px solid rgba(255,255,255,0.3);
+                                padding: 8px 16px;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                flex: 1;
+                            ">
+                                Напомнить позже
+                            </button>
+                            <button id="ignoreUpdateBtn" style="
+                                background: transparent;
+                                color: rgba(255,255,255,0.7);
+                                border: none;
+                                padding: 8px;
+                                cursor: pointer;
+                                font-size: 12px;
+                            ">
+                                Не напоминать об этой версии
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Обработчики кнопок
+                document.getElementById('updateNowBtn').addEventListener('click', () => {
+                    window.open(updateInfo.update_url || UPDATE_CONFIG.versionUrl.replace('version.json', 'index.html'), '_blank');
+                    notification.remove();
+                });
+                
+                document.getElementById('updateLaterBtn').addEventListener('click', () => {
+                    notification.remove();
+                });
+                
+                document.getElementById('ignoreUpdateBtn').addEventListener('click', () => {
+                    localStorage.setItem('ignoredUpdateVersion', updateInfo.version);
+                    notification.remove();
+                });
+            }
+        }
+
+        // Основной API сервер
+        const MAIN_API_SERVER = 'https://monitor.sedo.keydisk.ru';
+        const ASTRAL_API_SERVER = 'https://monitor.sedo.cloud.astral-dev.ru';
+        
+        // Конфигурация прокси
+        const PROXY_CONFIG = {
+            'direct': {
+                name: 'Прямое подключение к API',
+                format: '{}',
+                testUrl: `${MAIN_API_SERVER}/message/f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3`
+            },
+            'corsproxy': {
+                name: 'CORS Proxy',
+                format: 'https://corsproxy.io/?{}',
+                testUrl: `https://corsproxy.io/?${MAIN_API_SERVER}/message/f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3`
+            },
+            'allorigins': {
+                name: 'AllOrigins',
+                format: 'https://api.allorigins.win/raw?url={}',
+                testUrl: `https://api.allorigins.win/raw?url=${MAIN_API_SERVER}/message/f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3`
+            }
+        };
+
+        // Конфигурация поиска подписки (убрали КПП)
+        const SUBSCRIPTION_CONFIG = {
+            'inn': {
+                name: 'Проверка подписки по ИНН',
+                placeholder: 'Введите ИНН клиента (10 или 12 цифр)',
+                path: '/subscription/inn/',
+                example: '7712345678'
+            },
+            'regnum': {
+                name: 'Проверка подписки по рег.номеру СФР',
+                placeholder: 'Введите рег.номер клиента СФР',
+                path: '/subscription/regnum/',
+                example: '2322720573'
+            }
+        };
+
+        // Конфигурация поиска сообщений
+        const MESSAGES_CONFIG = {
+            'message': {
+                name: 'Поиск по ID сообщения',
+                placeholder: 'Введите ID сообщения',
+                needsDates: false,
+                baseUrl: MAIN_API_SERVER,
+                path: '/message/',
+                example: 'f5b23db7-2da0-4fa8-8fea-6c0b90bf93f3'
+            },
+            'clientRegNum': {
+                name: 'Поиск по рег.номеру клиента СФР',
+                placeholder: 'Введите рег.номер клиента СФР',
+                needsDates: true,
+                baseUrl: MAIN_API_SERVER,
+                path: '/documents/client/regnum/',
+                example: '123-456-789'
+            },
+            'clientGuid': {
+                name: 'Поиск по GUID учетной записи клиента',
+                placeholder: 'Введите GUID учетной записи клиента',
+                needsDates: true,
+                baseUrl: MAIN_API_SERVER,
+                path: '/documents/client/guid/',
+                example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            },
+            'clientInn': {
+                name: 'Поиск по ИНН клиента',
+                placeholder: 'Введите ИНН клиента',
+                needsDates: true,
+                baseUrl: MAIN_API_SERVER,
+                path: '/documents/client/inn/',
+                example: '7712345678'
+            },
+            'insurantRegNum': {
+                name: 'Поиск по рег.номеру налогоплательщика в ФСС',
+                placeholder: 'Введите рег.номер налогоплательщика в ФСС',
+                needsDates: true,
+                baseUrl: ASTRAL_API_SERVER,
+                path: '/documents/insurant/regnum/',
+                
+            },
+            'insurantInn': {
+                name: 'Поиск по ИНН налогоплательщика',
+                placeholder: 'Введите ИНН налогоплательщика',
+                needsDates: true,
+                baseUrl: ASTRAL_API_SERVER,
+                path: '/documents/insurant/inn/',
+                example: '7723456789'
+            }
+        };
+
+        // Предустановленные темы
+        const THEMES = {
+            'default': {
+                name: 'Светлая',
+                colors: {
+                    'primary-color': '#2a5298',
+                    'primary-dark': '#1e3c72',
+                    'primary-light': '#4a90e2',
+                    'secondary-color': '#ffb300',
+                    'secondary-dark': '#ff8f00',
+                    'background-color': '#f5f7fa',
+                    'card-bg': '#ffffff',
+                    'text-color': '#333333',
+                    'text-light': '#666666',
+                    'border-color': '#d1d9e6',
+                    'success-color': '#1a8754',
+                    'error-color': '#d32f2f',
+                    'warning-color': '#ff9800',
+                    'achievement-color': '#9c27b0'
+                }
+            },
+            'dark': {
+                name: 'Тёмная',
+                colors: {
+                    'primary-color': '#4a90e2',
+                    'primary-dark': '#2a5298',
+                    'primary-light': '#6eb0ff',
+                    'secondary-color': '#ffb300',
+                    'secondary-dark': '#ff8f00',
+                    'background-color': '#121212',
+                    'card-bg': '#1e1e1e',
+                    'text-color': '#e0e0e0',
+                    'text-light': '#aaaaaa',
+                    'border-color': '#333333',
+                    'success-color': '#4caf50',
+                    'error-color': '#f44336',
+                    'warning-color': '#ff9800',
+                    'achievement-color': '#ba68c8'
+                }
+            },
+            'blue': {
+                name: 'Синяя',
+                colors: {
+                    'primary-color': '#1565c0',
+                    'primary-dark': '#0d47a1',
+                    'primary-light': '#5e92f3',
+                    'secondary-color': '#00bcd4',
+                    'secondary-dark': '#00838f',
+                    'background-color': '#e3f2fd',
+                    'card-bg': '#ffffff',
+                    'text-color': '#0d47a1',
+                    'text-light': '#546e7a',
+                    'border-color': '#bbdefb',
+                    'success-color': '#00c853',
+                    'error-color': '#d50000',
+                    'warning-color': '#ff9100',
+                    'achievement-color': '#7b1fa2'
+                }
+            },
+            'green': {
+                name: 'Зелёная',
+                colors: {
+                    'primary-color': '#1a8754',
+                    'primary-dark': '#0d5c3a',
+                    'primary-light': '#4caf50',
+                    'secondary-color': '#8bc34a',
+                    'secondary-dark': '#689f38',
+                    'background-color': '#e8f5e9',
+                    'card-bg': '#ffffff',
+                    'text-color': '#1b5e20',
+                    'text-light': '#4caf50',
+                    'border-color': '#c8e6c9',
+                    'success-color': '#2e7d32',
+                    'error-color': '#c62828',
+                    'warning-color': '#f9a825',
+                    'achievement-color': '#7b1fa2'
+                }
+            },
+            'orange': {
+                name: 'Оранжевая',
+                colors: {
+                    'primary-color': '#f57c00',
+                    'primary-dark': '#e65100',
+                    'primary-light': '#ffb74d',
+                    'secondary-color': '#ff9800',
+                    'secondary-dark': '#f57c00',
+                    'background-color': '#fff3e0',
+                    'card-bg': '#ffffff',
+                    'text-color': '#bf360c',
+                    'text-light': '#ff9800',
+                    'border-color': '#ffe0b2',
+                    'success-color': '#689f38',
+                    'error-color': '#d32f2f',
+                    'warning-color': '#ffa000',
+                    'achievement-color': '#7b1fa2'
+                }
+            },
+            'pink': {
+                name: 'Розовая',
+                colors: {
+                    'primary-color': '#e91e63',
+                    'primary-dark': '#ad1457',
+                    'primary-light': '#f48fb1',
+                    'secondary-color': '#ec407a',
+                    'secondary-dark': '#d81b60',
+                    'background-color': '#fce4ec',
+                    'card-bg': '#ffffff',
+                    'text-color': '#880e4f',
+                    'text-light': '#c2185b',
+                    'border-color': '#f8bbd9',
+                    'success-color': '#4caf50',
+                    'error-color': '#f44336',
+                    'warning-color': '#ff9800',
+                    'achievement-color': '#9c27b0'
+                }
+            }
+        };
+
+        // Анимированные фоны за достижения
+        const ACHIEVEMENT_BACKGROUNDS = {
+            'bgGold': {
+                id: 'bgGold',
+                name: 'Золотой градиент',
+                description: 'За получение всех достижений',
+                unlockRequirement: 'unlockAll',
+                previewClass: 'bg-achievement-gold'
+            },
+            'bgSilver': {
+                id: 'bgSilver',
+                name: 'Серебряный градиент',
+                description: 'За получение 3 достижений',
+                unlockRequirement: 'unlock3',
+                previewClass: 'bg-achievement-silver'
+            },
+            'bgBronze': {
+                id: 'bgBronze',
+                name: 'Бронзовый градиент',
+                description: 'За получение 2 достижений',
+                unlockRequirement: 'unlock2',
+                previewClass: 'bg-achievement-bronze'
+            },
+            'bgRainbow': {
+                id: 'bgRainbow',
+                name: 'Радужный градиент',
+                description: 'За выполнение 50 проверок',
+                unlockRequirement: 'totalChecks50',
+                previewClass: 'bg-achievement-rainbow'
+            },
+            'bgParticle': {
+                id: 'bgParticle',
+                name: 'Частицы',
+                description: 'За выполнение 100 проверок',
+                unlockRequirement: 'totalChecks100',
+                previewClass: 'bg-achievement-particle'
+            }
+        };
+
+        // Система достижений
+        const ACHIEVEMENTS = {
+            'subscription_master': {
+                id: 'subscription_master',
+                name: 'Мастер проверок',
+                description: 'Выполнить 10 проверок подписки',
+                icon: 'fa-user-check',
+                target: 10,
+                type: 'subscription',
+                backgroundReward: 'bgBronze'
+            },
+            'message_explorer': {
+                id: 'message_explorer',
+                name: 'Исследователь сообщений',
+                description: 'Найти 5 сообщений по ID',
+                icon: 'fa-envelope',
+                target: 5,
+                type: 'message',
+                backgroundReward: null
+            },
+            'client_analyst': {
+                id: 'client_analyst',
+                name: 'Аналитик клиентов',
+                description: 'Выполнить 3 поиска по клиентам',
+                icon: 'fa-users',
+                target: 3,
+                type: 'client',
+                backgroundReward: null
+            },
+            'insurant_expert': {
+                id: 'insurant_expert',
+                name: 'Эксперт по налогоплательщикам',
+                description: 'Выполнить 3 поиска по налогоплательщикам',
+                icon: 'fa-building',
+                target: 3,
+                type: 'insurant',
+                backgroundReward: null
+            }
+        };
+
+        // === КОНФИГУРАЦИЯ ОПТИМИЗАЦИИ ===
+        const CACHE_CONFIG = {
+            TTL: 5 * 60 * 1000, // 5 минут
+            MAX_ITEMS: 50,
+            ENABLED: true
+        };
+
+        const REQUEST_CONFIG = {
+            MAX_RETRIES: 2,
+            RETRY_DELAY: 1000,
+            TIMEOUT: 10000,
+            DEBOUNCE_DELAY: 500
+        };
+
+        // Класс для управления кэшем
+        class RequestCache {
+            constructor() {
+                this.cache = new Map();
+                this.loadFromStorage();
+            }
+
+            loadFromStorage() {
+                try {
+                    const savedCache = localStorage.getItem('sedoRequestCache');
+                    if (savedCache) {
+                        const parsed = JSON.parse(savedCache);
+                        const now = Date.now();
+                        
+                        Object.entries(parsed).forEach(([key, value]) => {
+                            if (now - value.timestamp < CACHE_CONFIG.TTL) {
+                                this.cache.set(key, value);
+                            }
+                        });
+                        
+                        this.cleanup();
+                    }
+                } catch (e) {
+                    console.error('Ошибка загрузки кэша:', e);
+                }
+            }
+
+            saveToStorage() {
+                try {
+                    const cacheObj = Object.fromEntries(this.cache);
+                    localStorage.setItem('sedoRequestCache', JSON.stringify(cacheObj));
+                } catch (e) {
+                    console.error('Ошибка сохранения кэша:', e);
+                }
+            }
+
+            get(key) {
+                if (!CACHE_CONFIG.ENABLED) return null;
+                
+                const cached = this.cache.get(key);
+                if (!cached) return null;
+                
+                const now = Date.now();
+                if (now - cached.timestamp > CACHE_CONFIG.TTL) {
+                    this.cache.delete(key);
+                    this.saveToStorage();
+                    return null;
+                }
+                
+                return cached.data;
+            }
+
+            set(key, data) {
+                if (!CACHE_CONFIG.ENABLED) return;
+                
+                this.cache.set(key, {
+                    data: data,
+                    timestamp: Date.now()
+                });
+                
+                this.cleanup();
+                this.saveToStorage();
+            }
+
+            cleanup() {
+                if (this.cache.size > CACHE_CONFIG.MAX_ITEMS) {
+                    const entries = Array.from(this.cache.entries());
+                    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+                    
+                    const toRemove = entries.slice(0, this.cache.size - CACHE_CONFIG.MAX_ITEMS);
+                    toRemove.forEach(([key]) => this.cache.delete(key));
+                }
+            }
+
+            clear() {
+                this.cache.clear();
+                localStorage.removeItem('sedoRequestCache');
+            }
+
+            delete(key) {
+                this.cache.delete(key);
+                this.saveToStorage();
+            }
+        }
+
+        // Утилиты для дебаунсинга
+        class Debouncer {
+            constructor(delay) {
+                this.delay = delay;
+                this.timeout = null;
+            }
+
+            debounce(func) {
+                return (...args) => {
+                    clearTimeout(this.timeout);
+                    this.timeout = setTimeout(() => func(...args), this.delay);
+                };
+            }
+
+            cancel() {
+                clearTimeout(this.timeout);
+            }
+        }
+
+        // Текущие настройки
+        let currentSettings = {
+            theme: 'default',
+            proxy: 'direct',
+            currentTab: 'subscription',
+            subscriptionType: 'inn',
+            clientSearchType: 'clientRegNum',
+            insurantSearchType: 'insurantRegNum',
+            activeBackground: null,
+            collapsedSections: {
+                subsectionMessageId: false,
+                subsectionClient: true,
+                subsectionInsurant: true
+            }
+        };
+
+        // Статистика и достижения
+        let userStats = {
+            subscriptionChecks: 0,
+            messageSearches: 0,
+            clientSearches: 0,
+            insurantSearches: 0,
+            unlockedAchievements: [],
+            unlockedBackgrounds: []
+        };
+
+        // Инициализация кэша
+        const requestCache = new RequestCache();
+        const activeRequests = new Map();
+        const debouncers = {
+            subscription: new Debouncer(REQUEST_CONFIG.DEBOUNCE_DELAY),
+            messageId: new Debouncer(REQUEST_CONFIG.DEBOUNCE_DELAY),
+            client: new Debouncer(REQUEST_CONFIG.DEBOUNCE_DELAY),
+            insurant: new Debouncer(REQUEST_CONFIG.DEBOUNCE_DELAY)
+        };
+
+        // Элементы DOM
+        const settingsToggle = document.getElementById('settingsToggle');
+        const settingsContent = document.getElementById('settingsContent');
+        const settingsIcon = document.getElementById('settingsIcon');
+        const currentThemeName = document.getElementById('currentThemeName');
+        const subscriptionTypeSelector = document.getElementById('subscriptionTypeSelector');
+        const subscriptionInput = document.getElementById('subscriptionInput');
+        const subscriptionButton = document.getElementById('subscriptionButton');
+        const subscriptionLoadingIndicator = document.getElementById('subscriptionLoadingIndicator');
+        const subscriptionErrorPanel = document.getElementById('subscriptionErrorPanel');
+        const subscriptionErrorMessage = document.getElementById('subscriptionErrorMessage');
+        const subscriptionResult = document.getElementById('subscriptionResult');
+        
+        const messageIdInput = document.getElementById('messageIdInput');
+        const messageIdButton = document.getElementById('messageIdButton');
+        
+        const clientSearchTypeSelector = document.getElementById('clientSearchTypeSelector');
+        const clientSearchInput = document.getElementById('clientSearchInput');
+        const clientSearchButton = document.getElementById('clientSearchButton');
+        const clientStartDate = document.getElementById('clientStartDate');
+        const clientEndDate = document.getElementById('clientEndDate');
+        
+        const insurantSearchTypeSelector = document.getElementById('insurantSearchTypeSelector');
+        const insurantSearchInput = document.getElementById('insurantSearchInput');
+        const insurantSearchButton = document.getElementById('insurantSearchButton');
+        const insurantStartDate = document.getElementById('insurantStartDate');
+        const insurantEndDate = document.getElementById('insurantEndDate');
+        
+        const messagesLoadingIndicator = document.getElementById('messagesLoadingIndicator');
+        const messagesErrorPanel = document.getElementById('messagesErrorPanel');
+        const messagesErrorMessage = document.getElementById('messagesErrorMessage');
+        const messagesNotFoundPanel = document.getElementById('messagesNotFoundPanel');
+        const messagesNotFoundMessage = document.getElementById('messagesNotFoundMessage');
+        const messagesContentContainer = document.getElementById('messagesContentContainer');
+        
+        const achievementNotification = document.getElementById('achievementNotification');
+        const achievementNotificationTitle = document.getElementById('achievementNotificationTitle');
+        const achievementNotificationDesc = document.getElementById('achievementNotificationDesc');
+        const achievementsList = document.getElementById('achievementsList');
+        const achievementsCount = document.getElementById('achievementsCount');
+        const totalChecks = document.getElementById('totalChecks');
+        const achievementsProgress = document.getElementById('achievementsProgress');
+        const backgroundSelectorContainer = document.getElementById('backgroundSelectorContainer');
+        const backgroundSelector = document.getElementById('backgroundSelector');
+        
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const subsections = document.querySelectorAll('.subsection');
+
+        // Элементы для автообновления
+        const manualCheckUpdate = document.getElementById('manualCheckUpdate');
+        const appVersion = document.getElementById('appVersion');
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            loadUserStats();
+            applyTheme(currentSettings.theme);
+            setupEventListeners();
+            setupTabs();
+            setupSubscription();
+            setupMessages();
+            setDefaultDates();
+            setupCollapsibleSections();
+            updateStatsDisplay();
+            renderAchievements();
+            updateBackgroundSelector();
+            applyActiveBackground();
+            
+            createParticles();
+            setupAnimationOptimization();
+            
+            // Инициализация автообновления
+            const autoUpdater = new AutoUpdater();
+            
+            // Обновляем отображение версии
+            if (appVersion) {
+                appVersion.textContent = UPDATE_CONFIG.currentVersion;
+            }
+            
+            // Настраиваем обработчик для ручной проверки обновлений
+            if (manualCheckUpdate) {
+                manualCheckUpdate.addEventListener('click', async function() {
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверяем...';
+                    this.disabled = true;
+                    
+                    try {
+                        await autoUpdater.checkForUpdates();
+                        
+                        this.innerHTML = '<i class="fas fa-check"></i> Проверено';
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="fas fa-sync-alt"></i> Проверить обновления';
+                            this.disabled = false;
+                        }, 2000);
+                        
+                    } catch (error) {
+                        this.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Ошибка';
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="fas fa-sync-alt"></i> Проверить обновления';
+                            this.disabled = false;
+                        }, 2000);
+                    }
+                });
+            }
+        });
+
+        // Оптимизация анимаций
+        function setupAnimationOptimization() {
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    pauseBackgroundAnimations();
+                } else {
+                    resumeBackgroundAnimations();
+                }
+            });
+        }
+
+        function pauseBackgroundAnimations() {
+            const backgrounds = document.querySelectorAll('.bg-achievement-gold, .bg-achievement-silver, .bg-achievement-bronze, .bg-achievement-rainbow');
+            backgrounds.forEach(bg => {
+                bg.style.animationPlayState = 'paused';
+            });
+        }
+
+        function resumeBackgroundAnimations() {
+            const backgrounds = document.querySelectorAll('.bg-achievement-gold, .bg-achievement-silver, .bg-achievement-bronze, .bg-achievement-rainbow');
+            backgrounds.forEach(bg => {
+                bg.style.animationPlayState = 'running';
+            });
+        }
+
+        // Генерация ключа для кэша
+        function generateCacheKey(type, params) {
+            return `${type}_${JSON.stringify(params)}`;
+        }
+
+        // Утилита для выполнения запросов
+        async function fetchWithRetryAndCache(url, options = {}, cacheKey = null, retryCount = REQUEST_CONFIG.MAX_RETRIES) {
+            if (cacheKey) {
+                const cached = requestCache.get(cacheKey);
+                if (cached) {
+                    console.log('Используем кэшированные данные для ключа:', cacheKey);
+                    return cached;
+                }
+            }
+
+            if (activeRequests.has(cacheKey)) {
+                console.log('Ждем завершения активного запроса:', cacheKey);
+                return await activeRequests.get(cacheKey);
+            }
+
+            const requestPromise = (async () => {
+                for (let i = 0; i <= retryCount; i++) {
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), REQUEST_CONFIG.TIMEOUT);
+                        
+                        options.signal = controller.signal;
+                        
+                        const response = await fetch(url, options);
+                        clearTimeout(timeoutId);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (url.includes('corsproxy.io') || url.includes('allorigins.win')) {
+                            if (data.contents) {
+                                try {
+                                    return JSON.parse(data.contents);
+                                } catch (e) {}
+                            }
+                        }
+                        
+                        if (cacheKey) {
+                            requestCache.set(cacheKey, data);
+                        }
+                        
+                        return data;
+                        
+                    } catch (error) {
+                        if (i === retryCount) {
+                            throw error;
+                        }
+                        
+                        await new Promise(resolve => setTimeout(resolve, REQUEST_CONFIG.RETRY_DELAY * (i + 1)));
+                    }
+                }
+            })();
+
+            activeRequests.set(cacheKey, requestPromise);
+            
+            try {
+                const result = await requestPromise;
+                return result;
+            } finally {
+                activeRequests.delete(cacheKey);
+            }
+        }
+
+        // Оптимизированная функция загрузки подписки
+        async function fetchSubscription(searchValue, subscriptionType, proxyType = null) {
+            const proxyToUse = proxyType || currentSettings.proxy;
+            const subscriptionConfig = SUBSCRIPTION_CONFIG[subscriptionType];
+            
+            if (!subscriptionConfig) throw new Error(`Неизвестный тип подписки: ${subscriptionType}`);
+            
+            const targetUrl = `${MAIN_API_SERVER}${subscriptionConfig.path}${encodeURIComponent(searchValue)}`;
+            const proxyConfig = PROXY_CONFIG[proxyToUse];
+            
+            if (!proxyConfig) throw new Error(`Неизвестный прокси: ${proxyToUse}`);
+            
+            let url;
+            if (proxyToUse === 'direct') {
+                url = targetUrl;
+            } else {
+                if (proxyConfig.format.includes('{}')) {
+                    url = proxyConfig.format.replace('{}', targetUrl);
+                } else if (proxyConfig.format.includes('?url=')) {
+                    url = `${proxyConfig.format}${encodeURIComponent(targetUrl)}`;
+                } else {
+                    url = `${proxyConfig.format}${targetUrl}`;
+                }
+            }
+            
+            const cacheKey = generateCacheKey('subscription', {
+                type: subscriptionType,
+                value: searchValue,
+                proxy: proxyToUse
+            });
+            
+            return fetchWithRetryAndCache(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                mode: 'cors'
+            }, cacheKey);
+        }
+
+        // Оптимизированная функция загрузки сообщений
+        async function fetchMessages(searchValue, searchType, startDate = null, endDate = null, proxyType = null) {
+            const proxyToUse = proxyType || currentSettings.proxy;
+            const messagesConfig = MESSAGES_CONFIG[searchType];
+            
+            if (!messagesConfig) throw new Error(`Неизвестный тип поиска: ${searchType}`);
+            
+            let targetUrl;
+            if (searchType === 'message') {
+                targetUrl = `${messagesConfig.baseUrl}${messagesConfig.path}${searchValue}`;
+            } else {
+                if (!startDate || !endDate) throw new Error('Укажите обе даты');
+                if (new Date(endDate) < new Date(startDate)) throw new Error('Дата окончания не может быть меньше даты начала');
+                
+                targetUrl = `${messagesConfig.baseUrl}${messagesConfig.path}${searchValue}?start=${startDate}&end=${endDate}`;
+            }
+            
+            const proxyConfig = PROXY_CONFIG[proxyToUse];
+            
+            if (!proxyConfig) throw new Error(`Неизвестный прокси: ${proxyToUse}`);
+            
+            let url;
+            if (proxyToUse === 'direct') {
+                url = targetUrl;
+            } else {
+                if (proxyConfig.format.includes('{}')) {
+                    url = proxyConfig.format.replace('{}', targetUrl);
+                } else if (proxyConfig.format.includes('?url=')) {
+                    url = `${proxyConfig.format}${encodeURIComponent(targetUrl)}`;
+                } else {
+                    url = `${proxyConfig.format}${targetUrl}`;
+                }
+            }
+            
+            const cacheKey = generateCacheKey('messages', {
+                type: searchType,
+                value: searchValue,
+                startDate: startDate,
+                endDate: endDate,
+                proxy: proxyToUse
+            });
+            
+            return fetchWithRetryAndCache(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                mode: 'cors'
+            }, cacheKey);
+        }
+
+        // Загрузка настроек из localStorage
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('sedoMonitorSettings');
+            if (savedSettings) {
+                try {
+                    const parsed = JSON.parse(savedSettings);
+                    
+                    delete parsed.subscriptionSearch;
+                    delete parsed.messageIdSearch;
+                    delete parsed.clientSearch;
+                    delete parsed.insurantSearch;
+                    
+                    currentSettings = { ...currentSettings, ...parsed };
+                } catch (e) {
+                    console.error('Ошибка загрузки настроек:', e);
+                }
+            }
+        }
+
+        function loadUserStats() {
+            const savedStats = localStorage.getItem('sedoMonitorStats');
+            if (savedStats) {
+                try {
+                    userStats = JSON.parse(savedStats);
+                    
+                    if (!userStats.unlockedBackgrounds) {
+                        userStats.unlockedBackgrounds = [];
+                    }
+                } catch (e) {
+                    console.error('Ошибка загрузки статистики:', e);
+                    resetUserStats();
+                }
+            } else {
+                resetUserStats();
+            }
+        }
+
+        function resetUserStats() {
+            userStats = {
+                subscriptionChecks: 0,
+                messageSearches: 0,
+                clientSearches: 0,
+                insurantSearches: 0,
+                unlockedAchievements: [],
+                unlockedBackgrounds: []
+            };
+            saveUserStats();
+        }
+
+        function saveUserStats() {
+            localStorage.setItem('sedoMonitorStats', JSON.stringify(userStats));
+        }
+
+        function saveSettings() {
+            localStorage.setItem('sedoMonitorSettings', JSON.stringify(currentSettings));
+        }
+
+        function setupCollapsibleSections() {
+            subsections.forEach(subsection => {
+                const header = subsection.querySelector('.subsection-header');
+                const content = subsection.querySelector('.subsection-content');
+                const toggleIcon = subsection.querySelector('.subsection-toggle');
+                const subsectionId = subsection.id;
+                
+                if (currentSettings.collapsedSections && currentSettings.collapsedSections[subsectionId]) {
+                    header.classList.remove('active');
+                    content.classList.remove('active');
+                }
+                
+                header.addEventListener('click', function() {
+                    const isActive = this.classList.contains('active');
+                    
+                    this.classList.toggle('active');
+                    content.classList.toggle('active');
+                    
+                    if (currentSettings.collapsedSections) {
+                        currentSettings.collapsedSections[subsectionId] = !isActive;
+                        saveSettings();
+                    }
+                });
+            });
+        }
+
+        function setupTabs() {
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                    
+                    currentSettings.currentTab = tabId;
+                    saveSettings();
+                    
+                    if (tabId === 'achievements') {
+                        renderAchievements();
+                    }
+                });
+            });
+            
+            const activeTab = document.querySelector(`.tab[data-tab="${currentSettings.currentTab}"]`);
+            if (activeTab) {
+                activeTab.click();
+            }
+        }
+
+        function setupSubscription() {
+            const subscriptionTypeButtons = subscriptionTypeSelector.querySelectorAll('.search-type-btn');
+            
+            subscriptionTypeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    subscriptionTypeButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const subscriptionType = this.dataset.type;
+                    currentSettings.subscriptionType = subscriptionType;
+                    saveSettings();
+                    
+                    updateSubscriptionInterface(subscriptionType);
+                });
+            });
+            
+            const debouncedCheck = debouncers.subscription.debounce(() => {
+                if (subscriptionInput.value.trim()) {
+                    performSubscriptionCheck();
+                }
+            });
+            
+            subscriptionButton.addEventListener('click', debouncedCheck);
+            
+            subscriptionInput.addEventListener('input', debouncedCheck);
+            subscriptionInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    debouncers.subscription.cancel();
+                    performSubscriptionCheck();
+                }
+            });
+            
+            updateSubscriptionInterface(currentSettings.subscriptionType);
+            subscriptionInput.value = '';
+        }
+
+        function updateSubscriptionInterface(subscriptionType) {
+            const config = SUBSCRIPTION_CONFIG[subscriptionType];
+            
+            if (!config) return;
+            
+            subscriptionInput.placeholder = config.placeholder;
+            
+            const buttons = subscriptionTypeSelector.querySelectorAll('.search-type-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+                if (button.dataset.type === subscriptionType) {
+                    button.classList.add('active');
+                }
+            });
+        }
+
+        function setupMessages() {
+            const debouncedMessageSearch = debouncers.messageId.debounce(() => {
+                if (messageIdInput.value.trim()) {
+                    performMessageIdSearch();
+                }
+            });
+            
+            messageIdButton.addEventListener('click', debouncedMessageSearch);
+            
+            messageIdInput.addEventListener('input', debouncedMessageSearch);
+            messageIdInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    debouncers.messageId.cancel();
+                    performMessageIdSearch();
+                }
+            });
+            
+            messageIdInput.value = '';
+            
+            const clientSearchTypeButtons = clientSearchTypeSelector.querySelectorAll('.search-type-btn');
+            clientSearchTypeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    clientSearchTypeButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const searchType = this.dataset.type;
+                    currentSettings.clientSearchType = searchType;
+                    saveSettings();
+                    
+                    updateClientSearchInterface(searchType);
+                });
+            });
+            
+            const debouncedClientSearch = debouncers.client.debounce(() => {
+                if (clientSearchInput.value.trim()) {
+                    performClientSearch();
+                }
+            });
+            
+            clientSearchButton.addEventListener('click', debouncedClientSearch);
+            
+            clientSearchInput.addEventListener('input', debouncedClientSearch);
+            clientSearchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    debouncers.client.cancel();
+                    performClientSearch();
+                }
+            });
+            
+            clientSearchInput.value = '';
+            
+            const insurantSearchTypeButtons = insurantSearchTypeSelector.querySelectorAll('.search-type-btn');
+            insurantSearchTypeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    insurantSearchTypeButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const searchType = this.dataset.type;
+                    currentSettings.insurantSearchType = searchType;
+                    saveSettings();
+                    
+                    updateInsurantSearchInterface(searchType);
+                });
+            });
+            
+            const debouncedInsurantSearch = debouncers.insurant.debounce(() => {
+                if (insurantSearchInput.value.trim()) {
+                    performInsurantSearch();
+                }
+            });
+            
+            insurantSearchButton.addEventListener('click', debouncedInsurantSearch);
+            
+            insurantSearchInput.addEventListener('input', debouncedInsurantSearch);
+            insurantSearchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    debouncers.insurant.cancel();
+                    performInsurantSearch();
+                }
+            });
+            
+            insurantSearchInput.value = '';
+            
+            updateClientSearchInterface(currentSettings.clientSearchType);
+            updateInsurantSearchInterface(currentSettings.insurantSearchType);
+        }
+
+        function updateClientSearchInterface(searchType) {
+            const config = MESSAGES_CONFIG[searchType];
+            
+            if (!config) return;
+            
+            clientSearchInput.placeholder = config.placeholder;
+            
+            const buttons = clientSearchTypeSelector.querySelectorAll('.search-type-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+                if (button.dataset.type === searchType) {
+                    button.classList.add('active');
+                }
+            });
+        }
+
+        function updateInsurantSearchInterface(searchType) {
+            const config = MESSAGES_CONFIG[searchType];
+            
+            if (!config) return;
+            
+            insurantSearchInput.placeholder = config.placeholder;
+            
+            const buttons = insurantSearchTypeSelector.querySelectorAll('.search-type-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+                if (button.dataset.type === searchType) {
+                    button.classList.add('active');
+                }
+            });
+        }
+
+        function setDefaultDates() {
+            const today = new Date();
+            const weekAgo = new Date();
+            weekAgo.setDate(today.getDate() - 7);
+            
+            const formatDate = (date) => {
+                return date.toISOString().split('T')[0];
+            };
+            
+            clientStartDate.value = formatDate(weekAgo);
+            clientEndDate.value = formatDate(today);
+            
+            insurantStartDate.value = formatDate(weekAgo);
+            insurantEndDate.value = formatDate(today);
+        }
+
+        function applyTheme(themeName) {
+            document.body.classList.remove('theme-default', 'theme-dark', 'theme-blue', 'theme-green', 'theme-orange', 'theme-pink');
+            
+            if (themeName !== 'default') {
+                document.body.classList.add(`theme-${themeName}`);
+            }
+            
+            const theme = THEMES[themeName];
+            if (theme && theme.colors) {
+                Object.entries(theme.colors).forEach(([variable, color]) => {
+                    document.documentElement.style.setProperty(`--${variable}`, color);
+                });
+            }
+            
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.theme === themeName) {
+                    option.classList.add('active');
+                }
+            });
+            
+            currentThemeName.textContent = THEMES[themeName]?.name || 'Светлая';
+            currentSettings.theme = themeName;
+            saveSettings();
+        }
+
+        function setupEventListeners() {
+            settingsToggle.addEventListener('click', function() {
+                settingsContent.classList.toggle('active');
+                if (settingsContent.classList.contains('active')) {
+                    settingsIcon.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                } else {
+                    settingsIcon.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                }
+            });
+
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const theme = this.dataset.theme;
+                    applyTheme(theme);
+                });
+            });
+        }
+
+        function updateStatsDisplay() {
+            const total = userStats.subscriptionChecks + userStats.messageSearches + 
+                         userStats.clientSearches + userStats.insurantSearches;
+            
+            totalChecks.textContent = total;
+            
+            const unlockedCount = userStats.unlockedAchievements.length;
+            const totalAchievements = Object.keys(ACHIEVEMENTS).length;
+            achievementsCount.textContent = `${unlockedCount}/${totalAchievements}`;
+            
+            const progress = Math.round((unlockedCount / totalAchievements) * 100);
+            achievementsProgress.textContent = `${progress}%`;
+        }
+
+        function checkAchievements() {
+            const achievementsToCheck = [
+                { id: 'subscription_master', count: userStats.subscriptionChecks },
+                { id: 'message_explorer', count: userStats.messageSearches },
+                { id: 'client_analyst', count: userStats.clientSearches },
+                { id: 'insurant_expert', count: userStats.insurantSearches }
+            ];
+            
+            let newAchievements = [];
+            
+            achievementsToCheck.forEach(check => {
+                const achievement = ACHIEVEMENTS[check.id];
+                if (achievement && check.count >= achievement.target) {
+                    if (!userStats.unlockedAchievements.includes(check.id)) {
+                        userStats.unlockedAchievements.push(check.id);
+                        newAchievements.push(achievement);
+                        
+                        if (achievement.backgroundReward && !userStats.unlockedBackgrounds.includes(achievement.backgroundReward)) {
+                            userStats.unlockedBackgrounds.push(achievement.backgroundReward);
+                        }
+                    }
+                }
+            });
+            
+            checkBackgroundUnlocks();
+            
+            saveUserStats();
+            
+            newAchievements.forEach((achievement, index) => {
+                setTimeout(() => {
+                    showAchievementNotification(achievement);
+                }, index * 3000);
+            });
+            
+            updateStatsDisplay();
+            updateBackgroundSelector();
+            
+            if (currentSettings.currentTab === 'achievements') {
+                renderAchievements();
+            }
+        }
+
+        function checkBackgroundUnlocks() {
+            const total = userStats.subscriptionChecks + userStats.messageSearches + 
+                         userStats.clientSearches + userStats.insurantSearches;
+            
+            const totalAchievements = userStats.unlockedAchievements.length;
+            
+            Object.values(ACHIEVEMENT_BACKGROUNDS).forEach(background => {
+                let shouldUnlock = false;
+                
+                switch(background.unlockRequirement) {
+                    case 'unlockAll':
+                        shouldUnlock = totalAchievements >= 4;
+                        break;
+                    case 'unlock3':
+                        shouldUnlock = totalAchievements >= 3;
+                        break;
+                    case 'unlock2':
+                        shouldUnlock = totalAchievements >= 2;
+                        break;
+                    case 'totalChecks50':
+                        shouldUnlock = total >= 50;
+                        break;
+                    case 'totalChecks100':
+                        shouldUnlock = total >= 100;
+                        break;
+                }
+                
+                if (shouldUnlock && !userStats.unlockedBackgrounds.includes(background.id)) {
+                    userStats.unlockedBackgrounds.push(background.id);
+                    showBackgroundUnlockNotification(background);
+                }
+            });
+        }
+
+        function showBackgroundUnlockNotification(background) {
+            achievementNotificationTitle.textContent = 'Новый фон разблокирован!';
+            achievementNotificationDesc.textContent = background.name;
+            
+            achievementNotification.classList.add('active');
+            
+            setTimeout(() => {
+                achievementNotification.classList.remove('active');
+            }, 5000);
+        }
+
+        function showAchievementNotification(achievement) {
+            achievementNotificationTitle.textContent = achievement.name;
+            achievementNotificationDesc.textContent = achievement.description;
+            
+            achievementNotification.classList.add('active');
+            
+            setTimeout(() => {
+                achievementNotification.classList.remove('active');
+            }, 5000);
+        }
+
+        function updateBackgroundSelector() {
+            if (!backgroundSelector || !backgroundSelectorContainer) return;
+            
+            const unlockedCount = userStats.unlockedBackgrounds.length;
+            
+            if (unlockedCount === 0) {
+                backgroundSelectorContainer.style.display = 'none';
+                return;
+            }
+            
+            backgroundSelectorContainer.style.display = 'block';
+            
+            let html = '';
+            
+            html += `
+                <div class="theme-option ${!currentSettings.activeBackground ? 'active' : ''}" data-background="none">
+                    <div class="background-preview" style="background: var(--background-color);">
+                        <div class="background-name">Без фона</div>
+                    </div>
+                    <div>Без фона</div>
+                </div>
+            `;
+            
+            userStats.unlockedBackgrounds.forEach(bgId => {
+                const background = ACHIEVEMENT_BACKGROUNDS[bgId];
+                if (background) {
+                    const isActive = currentSettings.activeBackground === bgId;
+                    html += `
+                        <div class="theme-option ${isActive ? 'active' : ''}" data-background="${bgId}">
+                            <div class="background-preview ${background.previewClass} achievement-background-active">
+                                <div class="background-name">${background.name}</div>
+                            </div>
+                            <div>${background.name}</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            backgroundSelector.innerHTML = html;
+            
+            backgroundSelector.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const bgId = this.dataset.background;
+                    
+                    if (bgId === 'none') {
+                        deactivateAllBackgrounds();
+                        currentSettings.activeBackground = null;
+                    } else {
+                        deactivateAllBackgrounds();
+                        activateBackground(bgId);
+                        currentSettings.activeBackground = bgId;
+                    }
+                    
+                    backgroundSelector.querySelectorAll('.theme-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    saveSettings();
+                });
+            });
+        }
+
+        function activateBackground(bgId) {
+            const backgroundElement = document.getElementById(bgId);
+            if (backgroundElement) {
+                backgroundElement.classList.add('achievement-background-active');
+                
+                if (bgId === 'bgParticle') {
+                    createParticles();
+                }
+            }
+        }
+
+        function deactivateAllBackgrounds() {
+            Object.keys(ACHIEVEMENT_BACKGROUNDS).forEach(bgId => {
+                const backgroundElement = document.getElementById(bgId);
+                if (backgroundElement) {
+                    backgroundElement.classList.remove('achievement-background-active');
+                    
+                    if (bgId === 'bgParticle') {
+                        const particleContainer = document.getElementById('bgParticle');
+                        const particles = particleContainer.querySelectorAll('.particle');
+                        particles.forEach(particle => particle.remove());
+                    }
+                }
+            });
+        }
+
+        function applyActiveBackground() {
+            if (currentSettings.activeBackground) {
+                activateBackground(currentSettings.activeBackground);
+            }
+        }
+
+        function createParticles() {
+            const particleContainer = document.getElementById('bgParticle');
+            if (!particleContainer || !particleContainer.classList.contains('achievement-background-active')) {
+                return;
+            }
+            
+            const oldParticles = particleContainer.querySelectorAll('.particle');
+            oldParticles.forEach(particle => particle.remove());
+            
+            const particleCount = 30;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                const size = Math.random() * 20 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                particle.style.opacity = Math.random() * 0.2 + 0.05;
+                
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                
+                particleContainer.appendChild(particle);
+            }
+        }
+
+        function renderAchievements() {
+            let html = '';
+            
+            Object.values(ACHIEVEMENTS).forEach(achievement => {
+                const isUnlocked = userStats.unlockedAchievements.includes(achievement.id);
+                let currentCount = 0;
+                
+                switch(achievement.type) {
+                    case 'subscription':
+                        currentCount = userStats.subscriptionChecks;
+                        break;
+                    case 'message':
+                        currentCount = userStats.messageSearches;
+                        break;
+                    case 'client':
+                        currentCount = userStats.clientSearches;
+                        break;
+                    case 'insurant':
+                        currentCount = userStats.insurantSearches;
+                        break;
+                }
+                
+                const progress = Math.min(currentCount, achievement.target);
+                const progressPercent = Math.round((progress / achievement.target) * 100);
+                
+                html += `
+                    <div class="achievement-card ${isUnlocked ? '' : 'locked'}">
+                        <div class="achievement-badge ${isUnlocked ? '' : 'locked'}">
+                            <i class="fas ${achievement.icon}"></i>
+                        </div>
+                        <div class="achievement-content">
+                            <div class="achievement-name">${achievement.name}</div>
+                            <div class="achievement-description">${achievement.description}</div>
+                            <div class="achievement-progress">
+                                <div class="achievement-progress-bar" style="width: ${progressPercent}%"></div>
+                            </div>
+                            <div class="achievement-progress-text">
+                                ${isUnlocked ? 
+                                    '<i class="fas fa-check-circle" style="color: var(--success-color);"></i> Получено!' : 
+                                    `${progress}/${achievement.target} (${progressPercent}%)`}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            achievementsList.innerHTML = html;
+        }
+
+        function incrementSubscriptionCount() {
+            userStats.subscriptionChecks++;
+            saveUserStats();
+            checkAchievements();
+            updateStatsDisplay();
+        }
+
+        function incrementMessageCount() {
+            userStats.messageSearches++;
+            saveUserStats();
+            checkAchievements();
+            updateStatsDisplay();
+        }
+
+        function incrementClientCount() {
+            userStats.clientSearches++;
+            saveUserStats();
+            checkAchievements();
+            updateStatsDisplay();
+        }
+
+        function incrementInsurantCount() {
+            userStats.insurantSearches++;
+            saveUserStats();
+            checkAchievements();
+            updateStatsDisplay();
+        }
+
+        function performSubscriptionCheck() {
+            const searchValue = subscriptionInput.value.trim();
+            if (!searchValue) {
+                showSubscriptionError('Введите значение для проверки подписки');
+                return;
+            }
+
+            checkSubscription(searchValue, currentSettings.subscriptionType);
+            
+            incrementSubscriptionCount();
+        }
+
+        function performMessageIdSearch() {
+            const searchValue = messageIdInput.value.trim();
+            if (!searchValue) {
+                showMessagesError('Введите ID сообщения для поиска');
+                return;
+            }
+
+            loadMessagesData(searchValue, 'message');
+            
+            incrementMessageCount();
+        }
+
+        function performClientSearch() {
+            const searchValue = clientSearchInput.value.trim();
+            const searchType = currentSettings.clientSearchType;
+            const startDate = clientStartDate.value;
+            const endDate = clientEndDate.value;
+            
+            if (!searchValue) {
+                showMessagesError('Введите значение для поиска');
+                return;
+            }
+
+            const config = MESSAGES_CONFIG[searchType];
+            if (config.needsDates) {
+                if (!startDate || !endDate) {
+                    showMessagesError('Укажите обе даты');
+                    return;
+                }
+
+                if (new Date(endDate) < new Date(startDate)) {
+                    showMessagesError('Дата окончания не может быть меньше даты начала');
+                    return;
+                }
+            }
+            
+            loadMessagesData(searchValue, searchType, startDate, endDate);
+            
+            incrementClientCount();
+        }
+
+        function performInsurantSearch() {
+            const searchValue = insurantSearchInput.value.trim();
+            const searchType = currentSettings.insurantSearchType;
+            const startDate = insurantStartDate.value;
+            const endDate = insurantEndDate.value;
+            
+            if (!searchValue) {
+                showMessagesError('Введите значение для поиска');
+                return;
+            }
+
+            const config = MESSAGES_CONFIG[searchType];
+            if (config.needsDates) {
+                if (!startDate || !endDate) {
+                    showMessagesError('Укажите обе даты');
+                    return;
+                }
+
+                if (new Date(endDate) < new Date(startDate)) {
+                    showMessagesError('Дата окончания не может быть меньше даты начала');
+                    return;
+                }
+            }
+            
+            loadMessagesData(searchValue, searchType, startDate, endDate);
+            
+            incrementInsurantCount();
+        }
+
+        async function checkSubscription(searchValue, subscriptionType) {
+            subscriptionLoadingIndicator.classList.add('active');
+            subscriptionErrorPanel.classList.remove('active');
+            subscriptionResult.classList.remove('active');
+            subscriptionResult.innerHTML = '';
+
+            try {
+                const data = await fetchSubscription(searchValue, subscriptionType);
+                renderSubscriptionResult(data, searchValue, subscriptionType);
+                
+            } catch (error) {
+                console.error('Ошибка при проверке подписки:', error);
+                
+                showSubscriptionError(`Ошибка проверки подписки: ${error.message}`);
+            } finally {
+                subscriptionLoadingIndicator.classList.remove('active');
+            }
+        }
+
+        function renderSubscriptionResult(data, searchValue, subscriptionType) {
+            const config = SUBSCRIPTION_CONFIG[subscriptionType];
+            
+            let subscribed = false;
+            let waiting = false;
+            let status = 'unknown';
+            let docflow = [];
+            
+            if (data && data.status === 'ok' && data.data) {
+                status = data.status;
+                subscribed = data.data.subscribed || false;
+                waiting = data.data.waiting || false;
+                docflow = data.data.docflow || [];
+            } else if (data && data.status) {
+                status = data.status;
+                if (data.subscribed !== undefined) subscribed = data.subscribed;
+            }
+            
+            let html = `
+                <h2 class="card-title"><i class="fas fa-file-alt"></i> Результат проверки подписки</h2>
+                
+                <div class="subscription-status">
+            `;
+            
+            if (status === 'ok') {
+                if (subscribed === true) {
+                    html += `
+                        <i class="fas fa-check-circle status-icon active"></i>
+                        <div class="status-text active">Подписка активна</div>
+                    `;
+                } else if (waiting === true) {
+                    html += `
+                        <i class="fas fa-clock status-icon" style="color: var(--warning-color);"></i>
+                        <div class="status-text" style="color: var(--warning-color);">Ожидание подтверждения</div>
+                    `;
+                } else {
+                    html += `
+                        <i class="fas fa-times-circle status-icon inactive"></i>
+                        <div class="status-text inactive">Подписка отсутствует</div>
+                    `;
+                }
+            } else {
+                html += `
+                    <i class="fas fa-exclamation-circle status-icon inactive"></i>
+                    <div class="status-text inactive">Ошибка проверки</div>
+                `;
+            }
+            
+            html += `</div>`;
+            
+            html += `
+                <div class="subscription-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Тип проверки</div>
+                        <div class="detail-value">${config.name}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Поисковый запрос</div>
+                        <div class="detail-value highlight">${searchValue}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Статус запроса</div>
+                        <div class="detail-value">${status || 'не указан'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Статус подписки</div>
+                        <div class="detail-value">
+            `;
+            
+            if (status === 'ok') {
+                if (subscribed === true) {
+                    html += '<span class="status-success">Активна (subscribed: true)</span>';
+                } else if (waiting === true) {
+                    html += '<span class="status-warning">Ожидание подтверждения (waiting: true)</span>';
+                } else {
+                    html += '<span class="status-error">Отсутствует (subscribed: false)</span>';
+                }
+            } else {
+                html += 'не удалось определить';
+            }
+            
+            html += `</div></div>`;
+            
+            if (docflow.length > 0) {
+                html += `<div class="detail-item">
+                            <div class="detail-label">Документооборот</div>
+                            <div class="detail-value">${docflow.length} записей</div>
+                         </div>`;
+                
+                const firstDoc = docflow[0];
+                html += `<div class="detail-item">
+                            <div class="detail-label">Последняя запись</div>
+                            <div class="detail-value">${firstDoc.title || 'Без названия'}</div>
+                         </div>`;
+                
+                html += `<div class="detail-item">
+                            <div class="detail-label">Дата последней записи</div>
+                            <div class="detail-value">${firstDoc.date || 'Не указана'}</div>
+                         </div>`;
+            }
+            
+            html += `
+                    <div class="detail-item" style="border-top: 2px solid var(--border-color); margin-top: 10px; padding-top: 10px;">
+                        <div class="detail-label">Рекомендации</div>
+                        <div class="detail-value">
+            `;
+            
+            if (status !== 'ok') {
+                html += `Запрос вернул ошибку. Проверьте корректность введенных данных.`;
+            } else if (subscribed === true) {
+                html += `Подписка активна. Клиент может использовать сервисы СЭДО.`;
+            } else if (waiting === true) {
+                html += `Подписка ожидает подтверждения. Клиенту необходимо завершить процедуру подписки.`;
+            } else {
+                html += `Подписка отсутствует. Клиенту необходимо обратиться в СФР (ФСС) для оформления подписки.`;
+            }
+            
+            html += `</div></div></div>`;
+            
+            if (docflow.length > 0) {
+                html += `
+                    <div class="card" style="margin-top: 15px;">
+                        <h3 class="card-title"><i class="fas fa-exchange-alt"></i> История документооборота (${docflow.length} записей)</h3>
+                        <div class="info-grid">
+                `;
+                
+                docflow.slice(0, 3).forEach((doc, index) => {
+                    html += `
+                        <div class="info-item">
+                            <div class="info-label">Запись ${index + 1}</div>
+                            <div class="info-value">
+                                <div><strong>${doc.title || 'Без названия'}</strong></div>
+                                <div style="font-size: 12px; color: var(--text-light);">${doc.date || ''}</div>
+                                <div style="font-size: 11px; color: var(--text-light);">ID: ${doc.id || 'нет'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                if (docflow.length > 3) {
+                    html += `
+                        <div class="info-item">
+                            <div class="info-label">И еще записей</div>
+                            <div class="info-value">${docflow.length - 3}</div>
+                        </div>
+                    `;
+                }
+                
+                html += `</div></div>`;
+            }
+            
+            subscriptionResult.innerHTML = html;
+            subscriptionResult.classList.add('active');
+        }
+
+        function showSubscriptionError(message) {
+            subscriptionErrorMessage.innerHTML = message;
+            subscriptionErrorPanel.classList.add('active');
+            subscriptionResult.classList.remove('active');
+        }
+
+        async function loadMessagesData(searchValue, searchType, startDate = null, endDate = null) {
+            messagesLoadingIndicator.classList.add('active');
+            messagesErrorPanel.classList.remove('active');
+            messagesNotFoundPanel.classList.remove('active');
+            messagesContentContainer.innerHTML = '';
+
+            try {
+                const data = await fetchMessages(searchValue, searchType, startDate, endDate);
+                
+                if (searchType === 'message') {
+                    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+                        showMessagesNotFound(searchValue, searchType);
+                        return;
+                    }
+                    renderMessageData(data);
+                } else {
+                    renderDocumentsData(data, searchType, searchValue, startDate, endDate);
+                }
+                
+            } catch (error) {
+                console.error('Ошибка при загрузке данных:', error);
+                
+                if (error.message.includes('404') || error.message.includes('Not Found') || 
+                    error.message.includes('не найдено')) {
+                    showMessagesNotFound(searchValue, searchType);
+                    return;
+                }
+                
+                showMessagesError(`Ошибка загрузки данных: ${error.message}`);
+            } finally {
+                messagesLoadingIndicator.classList.remove('active');
+            }
+        }
+
+        function showMessagesNotFound(searchValue, searchType) {
+            let message = '';
+            
+            if (searchType === 'message') {
+                message = `Сообщение с ID <strong>"${searchValue}"</strong> не найдено в системе СЭДО.`;
+            } else {
+                const config = MESSAGES_CONFIG[searchType];
+                message = `По вашему запросу <strong>"${searchValue}"</strong> (${config.name}) не найдено документов.`;
+            }
+            
+            messagesNotFoundMessage.innerHTML = message;
+            messagesNotFoundPanel.classList.add('active');
+            messagesContentContainer.innerHTML = '';
+        }
+
+        function showMessagesError(message) {
+            messagesErrorMessage.innerHTML = message;
+            messagesErrorPanel.classList.add('active');
+            messagesNotFoundPanel.classList.remove('active');
+        }
+
+        function renderMessageData(data) {
+            let html = `
+                <div class="content-grid">
+                    <div class="card">
+                        <h2 class="card-title"><i class="fas fa-info-circle"></i> Основная информация</h2>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-fingerprint"></i> ID сообщения</div>
+                                <div class="info-value highlight">${data.id || 'Не указан'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label"><i class="far fa-calendar-alt"></i> Дата создания</div>
+                                <div class="info-value">${data.date || 'Не указана'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-file-alt"></i> Тип сообщения</div>
+                                <div class="info-value">${data.type || 'Не указан'}</div>
+                            </div>
+                            ${data.insurant && data.insurant.regnum ? `
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-user-shield"></i> Рег.номер страхователя</div>
+                                <div class="info-value">${data.insurant.regnum}</div>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h2 class="card-title"><i class="fas fa-history"></i> Статусы обработки</h2>
+                        <div class="info-grid">
+                            ${data.received_at ? `
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-inbox"></i> Получено</div>
+                                <div class="info-value">${data.received_at}</div>
+                            </div>` : ''}
+                            ${data.processed_at ? `
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-cogs"></i> Обработано</div>
+                                <div class="info-value">${data.processed_at}</div>
+                            </div>` : ''}
+                            ${data.delivered_at ? `
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-check-circle"></i> Доставлено</div>
+                                <div class="info-value">${data.delivered_at}</div>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (data.messages && data.messages.length > 0) {
+                html += `
+                <div class="messages-container">
+                    <div class="card">
+                        <div class="messages-header">
+                            <h2 class="card-title"><i class="fas fa-exchange-alt"></i> История сообщений</h2>
+                        </div>
+                        
+                        <div class="messages-list" id="messagesList">
+                `;
+                
+                data.messages.forEach((message, index) => {
+                    const isExpanded = index === 0;
+                    html += `
+                        <div class="message-card ${isExpanded ? 'expanded' : ''}" data-message-id="${message.id || ''}">
+                            <div class="message-header">
+                                <div>
+                                    <div class="message-title">${message.title || 'Без заголовка'}</div>
+                                    ${message.date ? `<div class="message-date">${message.date}</div>` : ''}
+                                </div>
+                                ${message.type ? `<div class="message-type">Тип: ${message.type}</div>` : ''}
+                            </div>
+                            <div class="message-details" style="${isExpanded ? 'display: grid;' : 'display: none;'}">
+                                ${message.id ? `
+                                <div class="info-item">
+                                    <div class="info-label">ID сообщения</div>
+                                    <div class="info-value">${message.id}</div>
+                                </div>` : ''}
+                                ${message.received_at ? `
+                                <div class="info-item">
+                                    <div class="info-label">Получено</div>
+                                    <div class="info-value">${message.received_at}</div>
+                                </div>` : ''}
+                                ${message.processed_at ? `
+                                <div class="info-item">
+                                    <div class="info-label">Обработано</div>
+                                    <div class="info-value">${message.processed_at}</div>
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div></div>`;
+            }
+            
+            messagesContentContainer.innerHTML = html;
+            
+            setTimeout(() => {
+                document.querySelectorAll('.message-card').forEach(card => {
+                    card.addEventListener('click', function(e) {
+                        if (e.target.closest('.message-details')) return;
+                        this.classList.toggle('expanded');
+                        const details = this.querySelector('.message-details');
+                        if (details) {
+                            details.style.display = this.classList.contains('expanded') ? 'grid' : 'none';
+                        }
+                    });
+                });
+            }, 100);
+        }
+
+        function renderDocumentsData(data, searchType, searchValue, startDate, endDate) {
+            const config = MESSAGES_CONFIG[searchType];
+            
+            let html = `
+                <div class="content-grid">
+                    <div class="card">
+                        <h2 class="card-title"><i class="fas fa-search"></i> Результаты поиска</h2>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-search"></i> Тип поиска</div>
+                                <div class="info-value">${config.name}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-hashtag"></i> Поисковый запрос</div>
+                                <div class="info-value highlight">${searchValue}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label"><i class="far fa-calendar-alt"></i> Период поиска</div>
+                                <div class="info-value">${startDate} — ${endDate}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-server"></i> Сервер API</div>
+                                <div class="info-value">${config.baseUrl.replace('https://', '')}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h2 class="card-title"><i class="fas fa-chart-bar"></i> Статистика</h2>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-file-alt"></i> Найдено документов</div>
+                                <div class="info-value" style="font-size: 20px; color: var(--primary-color);">${Array.isArray(data) ? data.length : 1}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-clock"></i> Дата начала</div>
+                                <div class="info-value">${startDate}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label"><i class="fas fa-clock"></i> Дата окончания</div>
+                                <div class="info-value">${endDate}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (data && (Array.isArray(data) ? data.length > 0 : true)) {
+                const documents = Array.isArray(data) ? data : [data];
+                
+                html += `
+                    <div class="messages-container">
+                        <div class="card">
+                            <div class="messages-header">
+                                <h2 class="card-title"><i class="fas fa-file-alt"></i> Найденные документы (${documents.length})</h2>
+                            </div>
+                            
+                            <div class="documents-grid" id="documentsList">
+                `;
+                
+                documents.forEach((document, index) => {
+                    html += `
+                        <div class="document-card">
+                            <div class="document-title">${document.title || document.name || `Документ ${index + 1}`}</div>
+                            ${document.id ? `<div class="document-id">ID: ${document.id}</div>` : ''}
+                            
+                            <div class="document-details">
+                                ${document.date ? `
+                                <div class="info-item">
+                                    <div class="info-label">Дата</div>
+                                    <div class="info-value">${document.date}</div>
+                                </div>` : ''}
+                                
+                                ${document.type ? `
+                                <div class="info-item">
+                                    <div class="info-label">Тип</div>
+                                    <div class="info-value">${document.type}</div>
+                                </div>` : ''}
+                                
+                                ${document.status ? `
+                                <div class="info-item">
+                                    <div class="info-label">Статус</div>
+                                    <div class="info-value ${document.status.toLowerCase().includes('успех') || document.status.toLowerCase().includes('success') ? 'status-success' : document.status.toLowerCase().includes('ошибка') || document.status.toLowerCase().includes('error') || document.status.toLowerCase().includes('fail') ? 'status-error' : ''}">${document.status}</div>
+                                </div>` : ''}
+                                
+                                ${document.sender ? `
+                                <div class="info-item">
+                                    <div class="info-label">Отправитель</div>
+                                    <div class="info-value">${document.sender}</div>
+                                </div>` : ''}
+                                
+                                ${document.receiver ? `
+                                <div class="info-item">
+                                    <div class="info-label">Получатель</div>
+                                    <div class="info-value">${document.receiver}</div>
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div></div>`;
+            } else {
+                html += `
+                    <div class="card">
+                        <div class="messages-header">
+                            <h2 class="card-title"><i class="fas fa-file-alt"></i> Результаты поиска</h2>
+                        </div>
+                        
+                        <div class="info-item" style="text-align: center; padding: 30px;">
+                            <i class="fas fa-inbox" style="font-size: 36px; color: var(--text-light); margin-bottom: 15px;"></i>
+                            <div style="font-size: 16px; color: var(--text-light);">Документы не найдены</div>
+                            <div style="margin-top: 10px; color: var(--text-light);">Попробуйте изменить параметры поиска</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            messagesContentContainer.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
