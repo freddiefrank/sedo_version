@@ -6,6 +6,101 @@
     <title>Мониторинг сообщений СЭДО</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Стили для экрана загрузки */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-logo {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 30px;
+            animation: logoPulse 2s infinite ease-in-out;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 15px;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid #4a90e2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .loading-progress {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4a90e2 0%, #ffb300 100%);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Остальные стили (остаются без изменений) */
         /* CSS переменные для тем */
         :root {
             --primary-color: #2a5298;
@@ -1532,6 +1627,18 @@
     </style>
 </head>
 <body class="theme-default">
+    <!-- Экран загрузки -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">
+            <img src="https://career.astral.ru/local/templates/hr/assets/favicon/android-chrome-512x512.png" alt="Astral Логотип">
+        </div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Загрузка системы мониторинга</div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar" id="loadingProgressBar"></div>
+        </div>
+    </div>
+    
     <!-- Анимированный фон ЛАВА -->
     <div class="bg-lava" id="bgLava">
         <div class="lava-blob"></div>
@@ -1657,7 +1764,7 @@
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-sync-alt"></i> Версия приложения</div>
-                        <div class="info-value" id="appVersion">1.1.1</div>
+                        <div class="info-value" id="appVersion">1.1.2</div>
                     </div>
                     <button id="manualCheckUpdate" class="search-btn" style="width: 100%; margin-top: 10px;">
                         <i class="fas fa-sync-alt"></i> Проверить обновления
@@ -1876,6 +1983,53 @@
     </div>
 
     <script>
+        // Функция для управления экраном загрузки
+        function initLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const loadingProgressBar = document.getElementById('loadingProgressBar');
+            
+            // Имитация прогресса загрузки
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) {
+                    progress = 90;
+                }
+                loadingProgressBar.style.width = progress + '%';
+            }, 200);
+            
+            // Скрытие экрана загрузки после полной загрузки страницы
+            window.addEventListener('load', function() {
+                clearInterval(progressInterval);
+                loadingProgressBar.style.width = '100%';
+                
+                // Ждем немного, чтобы пользователь увидел завершение загрузки
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                    
+                    // Удаляем экран загрузки из DOM после завершения анимации
+                    setTimeout(() => {
+                        if (loadingScreen.parentNode) {
+                            loadingScreen.parentNode.removeChild(loadingScreen);
+                        }
+                    }, 500);
+                }, 500);
+            });
+            
+            // На случай, если событие load не сработает, скрываем экран через 5 секунд
+            setTimeout(() => {
+                if (!loadingScreen.classList.contains('hidden')) {
+                    clearInterval(progressInterval);
+                    loadingScreen.classList.add('hidden');
+                    setTimeout(() => {
+                        if (loadingScreen.parentNode) {
+                            loadingScreen.parentNode.removeChild(loadingScreen);
+                        }
+                    }, 500);
+                }
+            }, 5000);
+        }
+        
         // Основной API сервер
         const MAIN_API_SERVER = 'https://monitor.sedo.keydisk.ru';
         const ASTRAL_API_SERVER = 'https://monitor.sedo.cloud.astral-dev.ru';
@@ -2729,6 +2883,10 @@
 
         // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация экрана загрузки
+            initLoadingScreen();
+            
+            // Загрузка остальных компонентов
             loadSettings();
             loadUserStats();
             applyTheme(currentSettings.theme);
