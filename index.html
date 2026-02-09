@@ -562,6 +562,60 @@
             border-left-color: #ffb300;
         }
 
+        /* Контекстное меню для полей ввода */
+        .input-context-menu {
+            position: fixed;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            min-width: 180px;
+            display: none;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .input-context-menu.active {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            color: var(--text-color);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .context-menu-item:hover {
+            background-color: var(--background-color);
+        }
+
+        .context-menu-item:active {
+            background-color: var(--primary-light);
+            color: white;
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 4px 0;
+        }
+
+        /* Эффекты для полей ввода при операциях с буфером обмена */
+        .search-input.copied {
+            border-color: var(--success-color) !important;
+            box-shadow: 0 0 0 2px rgba(26, 135, 84, 0.1) !important;
+        }
+
+        .search-input.pasted {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 2px rgba(42, 82, 152, 0.1) !important;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -1533,6 +1587,27 @@
         </div>
     </div>
     
+    <!-- Контекстное меню для полей ввода -->
+    <div class="input-context-menu" id="inputContextMenu">
+        <div class="context-menu-item" data-action="cut">
+            <i class="fas fa-cut"></i> Вырезать
+        </div>
+        <div class="context-menu-item" data-action="copy">
+            <i class="far fa-copy"></i> Копировать
+        </div>
+        <div class="context-menu-item" data-action="paste">
+            <i class="fas fa-paste"></i> Вставить
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="selectAll">
+            <i class="fas fa-mouse-pointer"></i> Выделить всё
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="clear">
+            <i class="fas fa-trash-alt"></i> Очистить
+        </div>
+    </div>
+
     <div class="container">
         <!-- Панель настроек -->
         <div class="settings-panel">
@@ -1582,7 +1657,7 @@
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-sync-alt"></i> Версия приложения</div>
-                        <div class="info-value" id="appVersion">1.1.0</div>
+                        <div class="info-value" id="appVersion">1.1.1</div>
                     </div>
                     <button id="manualCheckUpdate" class="search-btn" style="width: 100%; margin-top: 10px;">
                         <i class="fas fa-sync-alt"></i> Проверить обновления
@@ -2645,6 +2720,9 @@
         const achievementsModal = document.getElementById('achievementsModal');
         const achievementsModalClose = document.getElementById('achievementsModalClose');
 
+        // Элементы для контекстного меню
+        const inputContextMenu = document.getElementById('inputContextMenu');
+
         // Элементы для автообновления
         const manualCheckUpdate = document.getElementById('manualCheckUpdate');
         const appVersion = document.getElementById('appVersion');
@@ -2670,12 +2748,249 @@
             // Настройка плавающей кнопки и модального окна
             setupAchievementsButton();
             
+            // Настройка контекстного меню для полей ввода
+            setupInputContextMenu();
+            
             // Проверка доступности сервера при загрузке
             checkInitialConnection();
             
             // Запускаем периодическую проверку здоровья серверов
             startHealthChecks();
         });
+
+        // Настройка контекстного меню для полей ввода
+        function setupInputContextMenu() {
+            let currentInput = null;
+            
+            // Список полей ввода, для которых нужно контекстное меню
+            const inputSelectors = [
+                '#subscriptionInput',
+                '#messageIdInput',
+                '#clientSearchInput',
+                '#insurantSearchInput'
+            ];
+            
+            // Добавляем обработчики ко всем полям ввода
+            inputSelectors.forEach(selector => {
+                const input = document.querySelector(selector);
+                if (input) {
+                    // Отключаем стандартное контекстное меню
+                    input.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        currentInput = this;
+                        
+                        // Позиционируем меню рядом с курсором
+                        const x = e.pageX;
+                        const y = e.pageY;
+                        
+                        inputContextMenu.style.left = x + 'px';
+                        inputContextMenu.style.top = y + 'px';
+                        inputContextMenu.classList.add('active');
+                        
+                        // Обновляем доступность пунктов меню
+                        updateContextMenuItems();
+                    });
+                    
+                    // Скрываем меню при клике в поле ввода
+                    input.addEventListener('click', function() {
+                        inputContextMenu.classList.remove('active');
+                    });
+                    
+                    // Обработчики для специальных клавиш
+                    input.addEventListener('keydown', function(e) {
+                        if (e.ctrlKey || e.metaKey) {
+                            switch(e.key.toLowerCase()) {
+                                case 'a':
+                                    e.preventDefault();
+                                    this.select();
+                                    break;
+                                case 'c':
+                                    copyTextFromInput(this);
+                                    break;
+                                case 'x':
+                                    cutTextFromInput(this);
+                                    break;
+                                case 'v':
+                                    // Браузер сам вставит текст
+                                    break;
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Закрытие меню при клике в другом месте
+            document.addEventListener('click', function(e) {
+                if (!inputContextMenu.contains(e.target)) {
+                    inputContextMenu.classList.remove('active');
+                }
+            });
+            
+            // Закрытие меню по ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    inputContextMenu.classList.remove('active');
+                }
+            });
+            
+            // Обработчики для пунктов меню
+            inputContextMenu.querySelectorAll('.context-menu-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    if (!currentInput) return;
+                    
+                    const action = this.dataset.action;
+                    
+                    switch(action) {
+                        case 'cut':
+                            cutTextFromInput(currentInput);
+                            break;
+                        case 'copy':
+                            copyTextFromInput(currentInput);
+                            break;
+                        case 'paste':
+                            pasteTextToInput(currentInput);
+                            break;
+                        case 'selectAll':
+                            currentInput.select();
+                            break;
+                        case 'clear':
+                            currentInput.value = '';
+                            // Вызываем событие input для обновления состояния
+                            currentInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            break;
+                    }
+                    
+                    // Скрываем меню после действия
+                    inputContextMenu.classList.remove('active');
+                });
+            });
+            
+            // Обновление состояния пунктов меню
+            function updateContextMenuItems() {
+                if (!currentInput) return;
+                
+                const hasText = currentInput.value.length > 0;
+                const hasSelection = currentInput.selectionStart !== currentInput.selectionEnd;
+                
+                // Включение/выключение пунктов меню
+                const cutItem = inputContextMenu.querySelector('[data-action="cut"]');
+                const copyItem = inputContextMenu.querySelector('[data-action="copy"]');
+                const clearItem = inputContextMenu.querySelector('[data-action="clear"]');
+                
+                if (cutItem) cutItem.style.opacity = hasSelection ? '1' : '0.5';
+                if (copyItem) copyItem.style.opacity = hasSelection ? '1' : '0.5';
+                if (clearItem) clearItem.style.opacity = hasText ? '1' : '0.5';
+            }
+            
+            // Функция вырезания текста
+            function cutTextFromInput(input) {
+                if (input.selectionStart === input.selectionEnd) return;
+                
+                const selectedText = input.value.substring(input.selectionStart, input.selectionEnd);
+                
+                // Копируем в буфер обмена
+                navigator.clipboard.writeText(selectedText).then(() => {
+                    // Удаляем выделенный текст
+                    const start = input.selectionStart;
+                    const end = input.selectionEnd;
+                    input.value = input.value.substring(0, start) + input.value.substring(end);
+                    
+                    // Устанавливаем курсор на место удаленного текста
+                    input.selectionStart = input.selectionEnd = start;
+                    
+                    // Вызываем событие input для обновления состояния
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    // Показываем уведомление
+                    showMessage('Текст вырезан', 'Текст скопирован в буфер обмена и удален из поля', 'success');
+                }).catch(err => {
+                    console.error('Ошибка при вырезании текста:', err);
+                    showMessage('Ошибка', 'Не удалось вырезать текст', 'error');
+                });
+            }
+            
+            // Функция копирования текста
+            function copyTextFromInput(input) {
+                let textToCopy;
+                
+                if (input.selectionStart !== input.selectionEnd) {
+                    // Копируем выделенный текст
+                    textToCopy = input.value.substring(input.selectionStart, input.selectionEnd);
+                } else {
+                    // Копируем весь текст
+                    textToCopy = input.value;
+                }
+                
+                if (!textToCopy) return;
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // Показываем визуальную обратную связь
+                    const originalBg = input.style.backgroundColor;
+                    input.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        input.classList.remove('copied');
+                    }, 300);
+                    
+                    showMessage('Текст скопирован', 'Текст успешно скопирован в буфер обмена', 'success');
+                }).catch(err => {
+                    console.error('Ошибка при копировании текста:', err);
+                    showMessage('Ошибка', 'Не удалось скопировать текст', 'error');
+                });
+            }
+            
+            // Функция вставки текста
+            async function pasteTextToInput(input) {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    
+                    if (!text) return;
+                    
+                    const start = input.selectionStart;
+                    const end = input.selectionEnd;
+                    
+                    // Вставляем текст на место выделения
+                    input.value = input.value.substring(0, start) + text + input.value.substring(end);
+                    
+                    // Устанавливаем курсор после вставленного текста
+                    input.selectionStart = input.selectionEnd = start + text.length;
+                    
+                    // Вызываем событие input для обновления состояния
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    // Показываем визуальную обратную связь
+                    input.classList.add('pasted');
+                    
+                    setTimeout(() => {
+                        input.classList.remove('pasted');
+                    }, 300);
+                    
+                } catch (err) {
+                    console.error('Ошибка при вставке текста:', err);
+                    showMessage('Ошибка', 'Не удалось вставить текст. Возможно, буфер обмена пуст или нет прав доступа.', 'error');
+                }
+            }
+            
+            // Также добавляем обработчики для всех полей ввода на странице
+            document.querySelectorAll('input[type="text"], textarea').forEach(input => {
+                if (!input.classList.contains('search-input') && !inputSelectors.includes('#' + input.id)) {
+                    input.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        currentInput = this;
+                        
+                        const x = e.pageX;
+                        const y = e.pageY;
+                        
+                        inputContextMenu.style.left = x + 'px';
+                        inputContextMenu.style.top = y + 'px';
+                        inputContextMenu.classList.add('active');
+                        updateContextMenuItems();
+                    });
+                }
+            });
+        }
 
         // Настройка плавающей кнопки достижений
         function setupAchievementsButton() {
@@ -2749,8 +3064,8 @@
             const warningDiv = document.createElement('div');
             warningDiv.className = 'message-notification warning';
             warningDiv.innerHTML = `
-                <h4 style="margin-bottom: 5px; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Данные загружаются</h4>
-                <p style="margin-bottom: 10px;">Сервис подключается к API пожалуйста подождите.</p>
+                <h4 style="margin-bottom: 5px; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Данный загружаются</h4>
+                <p style="margin-bottom: 10px;">Пожалуйста подождите идет подключение к API.</p>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <button id="tryAgainBtn" style="
                         background: var(--primary-color);
